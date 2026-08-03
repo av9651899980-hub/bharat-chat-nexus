@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "BharatChat — Simple, fast, secure messaging" },
       {
         property: "og:description",
-        content: "Sign in to BharatChat for one-to-one chats, groups and voice messages.",
+        content: "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages.",
       },
     ],
   }),

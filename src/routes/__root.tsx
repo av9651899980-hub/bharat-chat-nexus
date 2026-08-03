@@ -77,14 +77,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
+      { title: "BharatChat — Simple, fast, secure messaging" },
+      { name: "description", content: "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { property: "og:title", content: "BharatChat — Simple, fast, secure messaging" },
+      { property: "og:description", content: "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "BharatChat — Simple, fast, secure messaging" },
+      { name: "twitter:description", content: "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a2bf7937-35bf-4880-88b1-70f7f8141351/id-preview-901208d1--93f964de-f9d5-4002-9fa2-16e7045d1afc.lovable.app-1785745340095.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a2bf7937-35bf-4880-88b1-70f7f8141351/id-preview-901208d1--93f964de-f9d5-4002-9fa2-16e7045d1afc.lovable.app-1785745340095.png" },
     ],
     links: [
       {
