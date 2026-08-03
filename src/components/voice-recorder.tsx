@@ -71,10 +71,34 @@ export function VoiceRecorder({ chatId, onSent }: { chatId: string; onSent: () =
   );
 }
 
-export function VoicePlayer({ path }: { path: string }) {
-  const getUrl = useServerFn(
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    (await0 => await0) as never,
+export function VoicePlayer({ path, duration }: { path: string; duration?: number | null }) {
+  const resolve = useServerFn(getVoiceUrl);
+  const [url, setUrl] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  async function load() {
+    if (url) return;
+    setLoading(true);
+    try {
+      const result = await resolve({ data: { path } });
+      setUrl(result.url);
+    } catch {
+      toast.error("Could not load the voice message");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return url ? (
+    <audio controls autoPlay src={url} className="h-9 w-52" />
+  ) : (
+    <button
+      onClick={load}
+      className="flex items-center gap-2 text-sm font-medium"
+      disabled={loading}
+    >
+      {loading ? <Loader2 className="size-4 animate-spin" /> : <Mic className="size-4" />}
+      Voice message{duration ? ` · ${duration}s` : ""}
+    </button>
   );
-  return null;
 }
