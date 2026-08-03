@@ -256,7 +256,14 @@ function GroupsTab() {
   const queryClient = useQueryClient();
   const { data } = useQuery({ queryKey: ["jarvis-groups"], queryFn: () => list({ data: undefined }) });
 
-  async function run(input: Parameters<typeof act>[0]["data"]) {
+  async function run(input: {
+    action: "add_member" | "remove_member" | "promote" | "demote" | "update" | "delete";
+    groupId: string;
+    userId?: string;
+    name?: string;
+    description?: string;
+    onlyAdminsSend?: boolean;
+  }) {
     await act({ data: input });
     queryClient.invalidateQueries({ queryKey: ["jarvis-groups"] });
   }

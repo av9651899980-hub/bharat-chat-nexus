@@ -18,6 +18,7 @@ import { Route as AuthenticatedChatsRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedGroupsRouteImport } from './routes/_authenticated/groups'
 import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedOmniversRouteImport } from './routes/_authenticated/omnivers'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedCChatIdRouteImport } from './routes/_authenticated/c.$chatId'
 
@@ -66,6 +67,11 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedOmniversRoute = AuthenticatedOmniversRouteImport.update({
+  id: '/omnivers',
+  path: '/omnivers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -86,6 +92,7 @@ export interface FileRoutesByFullPath {
   '/groups': typeof AuthenticatedGroupsRoute
   '/new': typeof AuthenticatedNewRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/omnivers': typeof AuthenticatedOmniversRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/c/$chatId': typeof AuthenticatedCChatIdRoute
 }
@@ -98,6 +105,7 @@ export interface FileRoutesByTo {
   '/groups': typeof AuthenticatedGroupsRoute
   '/new': typeof AuthenticatedNewRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
+  '/omnivers': typeof AuthenticatedOmniversRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/c/$chatId': typeof AuthenticatedCChatIdRoute
 }
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   '/_authenticated/groups': typeof AuthenticatedGroupsRoute
   '/_authenticated/new': typeof AuthenticatedNewRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/omnivers': typeof AuthenticatedOmniversRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/c/$chatId': typeof AuthenticatedCChatIdRoute
 }
@@ -126,6 +135,7 @@ export interface FileRouteTypes {
     | '/groups'
     | '/new'
     | '/notifications'
+    | '/omnivers'
     | '/profile'
     | '/c/$chatId'
   fileRoutesByTo: FileRoutesByTo
@@ -138,6 +148,7 @@ export interface FileRouteTypes {
     | '/groups'
     | '/new'
     | '/notifications'
+    | '/omnivers'
     | '/profile'
     | '/c/$chatId'
   id:
@@ -151,6 +162,7 @@ export interface FileRouteTypes {
     | '/_authenticated/groups'
     | '/_authenticated/new'
     | '/_authenticated/notifications'
+    | '/_authenticated/omnivers'
     | '/_authenticated/profile'
     | '/_authenticated/c/$chatId'
   fileRoutesById: FileRoutesById
@@ -228,6 +240,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/omnivers': {
+      id: '/_authenticated/omnivers'
+      path: '/omnivers'
+      fullPath: '/omnivers'
+      preLoaderRoute: typeof AuthenticatedOmniversRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -250,6 +269,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedGroupsRoute: typeof AuthenticatedGroupsRoute
   AuthenticatedNewRoute: typeof AuthenticatedNewRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedOmniversRoute: typeof AuthenticatedOmniversRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedCChatIdRoute: typeof AuthenticatedCChatIdRoute
 }
@@ -259,6 +279,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedGroupsRoute: AuthenticatedGroupsRoute,
   AuthenticatedNewRoute: AuthenticatedNewRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedOmniversRoute: AuthenticatedOmniversRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedCChatIdRoute: AuthenticatedCChatIdRoute,
 }
