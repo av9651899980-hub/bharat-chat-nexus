@@ -17,6 +17,8 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AuthenticatedChatsRouteImport } from './routes/_authenticated/chats'
 import { Route as AuthenticatedGroupsRouteImport } from './routes/_authenticated/groups'
 import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedCChatIdRouteImport } from './routes/_authenticated/c.$chatId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -58,6 +60,17 @@ const AuthenticatedNewRoute = AuthenticatedNewRouteImport.update({
   path: '/new',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCChatIdRoute = AuthenticatedCChatIdRouteImport.update({
   id: '/c/$chatId',
   path: '/c/$chatId',
@@ -72,6 +85,8 @@ export interface FileRoutesByFullPath {
   '/chats': typeof AuthenticatedChatsRoute
   '/groups': typeof AuthenticatedGroupsRoute
   '/new': typeof AuthenticatedNewRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/c/$chatId': typeof AuthenticatedCChatIdRoute
 }
 export interface FileRoutesByTo {
@@ -82,6 +97,8 @@ export interface FileRoutesByTo {
   '/chats': typeof AuthenticatedChatsRoute
   '/groups': typeof AuthenticatedGroupsRoute
   '/new': typeof AuthenticatedNewRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
+  '/profile': typeof AuthenticatedProfileRoute
   '/c/$chatId': typeof AuthenticatedCChatIdRoute
 }
 export interface FileRoutesById {
@@ -94,6 +111,8 @@ export interface FileRoutesById {
   '/_authenticated/chats': typeof AuthenticatedChatsRoute
   '/_authenticated/groups': typeof AuthenticatedGroupsRoute
   '/_authenticated/new': typeof AuthenticatedNewRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/c/$chatId': typeof AuthenticatedCChatIdRoute
 }
 export interface FileRouteTypes {
@@ -106,6 +125,8 @@ export interface FileRouteTypes {
     | '/chats'
     | '/groups'
     | '/new'
+    | '/notifications'
+    | '/profile'
     | '/c/$chatId'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -116,6 +137,8 @@ export interface FileRouteTypes {
     | '/chats'
     | '/groups'
     | '/new'
+    | '/notifications'
+    | '/profile'
     | '/c/$chatId'
   id:
     | '__root__'
@@ -127,6 +150,8 @@ export interface FileRouteTypes {
     | '/_authenticated/chats'
     | '/_authenticated/groups'
     | '/_authenticated/new'
+    | '/_authenticated/notifications'
+    | '/_authenticated/profile'
     | '/_authenticated/c/$chatId'
   fileRoutesById: FileRoutesById
 }
@@ -196,6 +221,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/c/$chatId': {
       id: '/_authenticated/c/$chatId'
       path: '/c/$chatId'
@@ -210,6 +249,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedChatsRoute: typeof AuthenticatedChatsRoute
   AuthenticatedGroupsRoute: typeof AuthenticatedGroupsRoute
   AuthenticatedNewRoute: typeof AuthenticatedNewRoute
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedCChatIdRoute: typeof AuthenticatedCChatIdRoute
 }
 
@@ -217,6 +258,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedChatsRoute: AuthenticatedChatsRoute,
   AuthenticatedGroupsRoute: AuthenticatedGroupsRoute,
   AuthenticatedNewRoute: AuthenticatedNewRoute,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedCChatIdRoute: AuthenticatedCChatIdRoute,
 }
 
