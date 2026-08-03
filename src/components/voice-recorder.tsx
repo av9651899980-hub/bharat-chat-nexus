@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { Mic, Square, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { useServerFn } from "@tanstack/react-start";
-import { uploadVoiceMessage } from "@/lib/voice.functions";
+import { uploadVoiceMessage, getVoiceUrl } from "@/lib/voice.functions";
 
 export function VoiceRecorder({ chatId, onSent }: { chatId: string; onSent: () => void }) {
   const upload = useServerFn(uploadVoiceMessage);
