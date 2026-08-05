@@ -21,6 +21,7 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedOmniversRouteImport } from './routes/_authenticated/omnivers'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedCChatIdRouteImport } from './routes/_authenticated/c.$chatId'
+import { Route as AuthenticatedUUserIdRouteImport } from './routes/_authenticated/u.$userId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -82,6 +83,11 @@ const AuthenticatedCChatIdRoute = AuthenticatedCChatIdRouteImport.update({
   path: '/c/$chatId',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedUUserIdRoute = AuthenticatedUUserIdRouteImport.update({
+  id: '/u/$userId',
+  path: '/u/$userId',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/omnivers': typeof AuthenticatedOmniversRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/c/$chatId': typeof AuthenticatedCChatIdRoute
+  '/u/$userId': typeof AuthenticatedUUserIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -108,6 +115,7 @@ export interface FileRoutesByTo {
   '/omnivers': typeof AuthenticatedOmniversRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/c/$chatId': typeof AuthenticatedCChatIdRoute
+  '/u/$userId': typeof AuthenticatedUUserIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -123,6 +131,7 @@ export interface FileRoutesById {
   '/_authenticated/omnivers': typeof AuthenticatedOmniversRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/c/$chatId': typeof AuthenticatedCChatIdRoute
+  '/_authenticated/u/$userId': typeof AuthenticatedUUserIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -138,6 +147,7 @@ export interface FileRouteTypes {
     | '/omnivers'
     | '/profile'
     | '/c/$chatId'
+    | '/u/$userId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/omnivers'
     | '/profile'
     | '/c/$chatId'
+    | '/u/$userId'
   id:
     | '__root__'
     | '/'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/_authenticated/omnivers'
     | '/_authenticated/profile'
     | '/_authenticated/c/$chatId'
+    | '/_authenticated/u/$userId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -261,6 +273,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCChatIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/u/$userId': {
+      id: '/_authenticated/u/$userId'
+      path: '/u/$userId'
+      fullPath: '/u/$userId'
+      preLoaderRoute: typeof AuthenticatedUUserIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -272,6 +291,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedOmniversRoute: typeof AuthenticatedOmniversRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedCChatIdRoute: typeof AuthenticatedCChatIdRoute
+  AuthenticatedUUserIdRoute: typeof AuthenticatedUUserIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -282,6 +302,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedOmniversRoute: AuthenticatedOmniversRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedCChatIdRoute: AuthenticatedCChatIdRoute,
+  AuthenticatedUUserIdRoute: AuthenticatedUUserIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -297,13 +318,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
