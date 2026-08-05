@@ -81,13 +81,30 @@ export async function findOrCreateDirectChat(userId: string, otherUserId: string
     .insert({ is_group: false, created_by: userId })
     .select("id")
     .single();
-  if (error || !chat) throw new Error("Could not start the conversation");
+  if (error || !chat) {
+    console.error("createChat failed", error);
+    throw new Error("Could not create conversation. Please try again.");
+  }
 
-  const { error: memberError } = await supabase.from("chat_members").insert([
-    { chat_id: chat.id, user_id: userId, is_admin: true },
-    { chat_id: chat.id, user_id: otherUserId },
-  ]);
-  if (memberError) throw new Error("Could not start the conversation");
+  // Insert the creator first (becomes admin), then the other member.
+  // A single multi-row insert trips the members_insert policy for the 2nd row.
+  const { error: selfError } = await supabase
+    .from("chat_members")
+    .insert({ chat_id: chat.id, user_id: userId, is_admin: true });
+  if (selfError) {
+    console.error("addSelfMember failed", selfError);
+    await supabase.from("chats").delete().eq("id", chat.id);
+    throw new Error("Could not create conversation. Please try again.");
+  }
+
+  const { error: otherError } = await supabase
+    .from("chat_members")
+    .insert({ chat_id: chat.id, user_id: otherUserId });
+  if (otherError) {
+    console.error("addOtherMember failed", otherError);
+    await supabase.from("chats").delete().eq("id", chat.id);
+    throw new Error("Could not add this person to the conversation.");
+  }
   return chat.id;
 }
 
@@ -97,14 +114,43 @@ export async function createGroup(userId: string, name: string, memberIds: strin
     .insert({ is_group: true, name, created_by: userId })
     .select("id")
     .single();
-  if (error || !chat) throw new Error("Could not create the group");
+  if (error || !chat) {
+    console.error("createGroup failed", error);
+    throw new Error("Could not create the group");
+  }
 
-  const { error: memberError } = await supabase.from("chat_members").insert([
-    { chat_id: chat.id, user_id: userId, is_admin: true },
-    ...memberIds.map((id) => ({ chat_id: chat.id, user_id: id })),
-  ]);
-  if (memberError) throw new Error("Could not add members to the group");
+  const { error: selfError } = await supabase
+    .from("chat_members")
+    .insert({ chat_id: chat.id, user_id: userId, is_admin: true });
+  if (selfError) {
+    console.error("groupSelfMember failed", selfError);
+    await supabase.from("chats").delete().eq("id", chat.id);
+    throw new Error("Could not create the group");
+  }
+
+  if (memberIds.length) {
+    const { error: memberError } = await supabase
+      .from("chat_members")
+      .insert(memberIds.map((id) => ({ chat_id: chat.id, user_id: id })));
+    if (memberError) {
+      console.error("groupMembers failed", memberError);
+      throw new Error("Group created, but some members could not be added");
+    }
+  }
   return chat.id;
+}
+
+export async function loadProfile(userId: string) {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("id, username, display_name, bio, avatar_url, status, last_seen")
+    .eq("id", userId)
+    .maybeSingle();
+  if (error) {
+    console.error("loadProfile failed", error);
+    throw new Error("Unable to open this user. Please try again.");
+  }
+  return data;
 }
 
 export async function searchProfiles(term: string, excludeId: string) {
