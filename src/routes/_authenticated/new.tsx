@@ -1,11 +1,10 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
+import { ArrowLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { useAccount } from "@/hooks/useAccount";
-import { findOrCreateDirectChat, searchProfiles } from "@/lib/chat-client";
+import { searchProfiles } from "@/lib/chat-client";
 
 export const Route = createFileRoute("/_authenticated/new")({
   head: () => ({
@@ -29,15 +28,6 @@ function NewChatPage() {
     enabled: !!userId && term.trim().length > 1,
     queryFn: () => searchProfiles(term.trim(), userId!),
   });
-
-  async function open(otherId: string) {
-    try {
-      const chatId = await findOrCreateDirectChat(userId!, otherId);
-      navigate({ to: "/c/$chatId", params: { chatId } });
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not start the conversation");
-    }
-  }
 
   return (
     <AppShell>
@@ -67,16 +57,18 @@ function NewChatPage() {
           {(people ?? []).map((p) => (
             <li key={p.id}>
               <button
-                onClick={() => open(p.id)}
-                className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left shadow-soft"
+                type="button"
+                onClick={() => navigate({ to: "/u/$userId", params: { userId: p.id } })}
+                className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left shadow-soft active:opacity-80"
               >
                 <span className="brand-gradient flex size-10 items-center justify-center rounded-full text-sm font-bold text-primary-foreground">
                   {p.display_name.charAt(0).toUpperCase()}
                 </span>
-                <span>
+                <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold">{p.display_name}</span>
                   <span className="block text-xs text-muted-foreground">@{p.username}</span>
                 </span>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
               </button>
             </li>
           ))}
