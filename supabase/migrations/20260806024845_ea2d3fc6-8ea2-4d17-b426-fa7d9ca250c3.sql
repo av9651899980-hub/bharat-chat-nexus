@@ -1,0 +1,1 @@
+ALTER TABLE public.staff_applications ADD COLUMN IF NOT EXISTS reviewed_by uuid REFERENCES auth.users(id) ON DELETE SET NULL;
