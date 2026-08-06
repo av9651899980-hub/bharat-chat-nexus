@@ -46,13 +46,22 @@ function GroupsPage() {
       toast.error("Give the group a name");
       return;
     }
+    if (selected.length === 0) {
+      toast.error("Select at least one other member");
+      return;
+    }
     setBusy(true);
     try {
       const id = await createGroup(userId!, name.trim(), selected);
       await queryClient.invalidateQueries({ queryKey: ["groups"] });
+      setCreating(false);
+      setName("");
+      setTerm("");
+      setSelected([]);
+      toast.success("Group created");
       navigate({ to: "/c/$chatId", params: { chatId: id } });
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not create the group");
+      toast.error(`Group creation failed: ${err instanceof Error ? err.message : "unknown error"}`);
     } finally {
       setBusy(false);
     }
