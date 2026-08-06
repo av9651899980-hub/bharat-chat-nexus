@@ -439,6 +439,7 @@ export type Database = {
           reason: string
           review_note: string | null
           reviewed_at: string | null
+          reviewed_by: string | null
           status: Database["public"]["Enums"]["application_status"]
           user_id: string
         }
@@ -448,6 +449,7 @@ export type Database = {
           reason: string
           review_note?: string | null
           reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           user_id: string
         }
@@ -457,6 +459,7 @@ export type Database = {
           reason?: string
           review_note?: string | null
           reviewed_at?: string | null
+          reviewed_by?: string | null
           status?: Database["public"]["Enums"]["application_status"]
           user_id?: string
         }

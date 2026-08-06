@@ -325,31 +325,146 @@ function StaffTab() {
   const setRole = useServerFn(jarvisSetRole);
   const queryClient = useQueryClient();
   const { data } = useQuery({ queryKey: ["jarvis-staff"], queryFn: () => list({ data: undefined }) });
+  const [approving, setApproving] = useState<string | null>(null);
+  const [rejecting, setRejecting] = useState<string | null>(null);
+  const [pickedRole, setPickedRole] = useState<"viewer" | "helper" | "admin" | "manager">("viewer");
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submitReview(id: string, status: "approved" | "rejected") {
+    setBusy(true);
+    try {
+      await review({
+        data: {
+          id,
+          status,
+          ...(status === "approved" ? { role: pickedRole } : {}),
+          ...(status === "rejected" && note.trim() ? { note: note.trim().slice(0, 300) } : {}),
+        },
+      });
+      setApproving(null);
+      setRejecting(null);
+      setNote("");
+      setPickedRole("viewer");
+      await queryClient.invalidateQueries({ queryKey: ["jarvis-staff"] });
+      await queryClient.invalidateQueries({ queryKey: ["jarvis-overview"] });
+      toast.success(status === "approved" ? "Application approved" : "Application rejected");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Review failed");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <>
       <p className="mb-2 text-xs uppercase tracking-widest text-jarvis/70">Applications</p>
+      {(data?.applications ?? []).length === 0 ? (
+        <Card>No staff applications yet.</Card>
+      ) : null}
       {(data?.applications ?? []).map((a) => (
         <Card key={a.id}>
           <p className="font-semibold">
-            {(a.profiles as { display_name?: string } | null)?.display_name ?? "Unknown"} — {a.status}
+            {(a.profiles as { display_name?: string } | null)?.display_name ?? "Unknown"}{" "}
+            <span className="text-xs text-muted-foreground">
+              @{(a.profiles as { username?: string } | null)?.username ?? "unknown"}
+            </span>{" "}
+            — {a.status}
           </p>
+          <p className="text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleString()}</p>
           <p className="text-xs text-muted-foreground">{a.reason}</p>
           {a.status === "pending" ? (
-            <div className="mt-2 flex gap-2">
-              {(["approved", "rejected"] as const).map((s) => (
-                <button
-                  key={s}
-                  onClick={async () => {
-                    await review({ data: { id: a.id, status: s } });
-                    queryClient.invalidateQueries({ queryKey: ["jarvis-staff"] });
-                  }}
-                  className="rounded-lg border border-jarvis/30 px-2 py-1 text-[11px] text-jarvis"
-                >
-                  {s}
-                </button>
-              ))}
+            <div className="mt-2">
+              {approving === a.id ? (
+                <div className="rounded-xl border border-jarvis/30 p-2">
+                  <p className="mb-2 text-[11px] uppercase tracking-widest text-jarvis/70">Select staff role</p>
+                  <div className="flex flex-wrap gap-2">
+                    {(["viewer", "helper", "admin", "manager"] as const).map((r) => (
+                      <button
+                        key={r}
+                        onClick={() => setPickedRole(r)}
+                        className={`rounded-lg border px-2 py-1 text-[11px] uppercase ${
+                          pickedRole === r
+                            ? "border-jarvis bg-jarvis/15 text-jarvis"
+                            : "border-jarvis/30 text-jarvis/70"
+                        }`}
+                      >
+                        {r}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      disabled={busy}
+                      onClick={() => submitReview(a.id, "approved")}
+                      className="rounded-lg border border-jarvis/60 bg-jarvis/10 px-2 py-1 text-[11px] font-semibold tracking-widest text-jarvis disabled:opacity-60"
+                    >
+                      {busy ? "CONFIRMING…" : "CONFIRM APPROVAL"}
+                    </button>
+                    <button
+                      onClick={() => setApproving(null)}
+                      className="rounded-lg border border-jarvis/30 px-2 py-1 text-[11px] text-jarvis/70"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : rejecting === a.id ? (
+                <div className="rounded-xl border border-destructive/40 p-2">
+                  <textarea
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    rows={2}
+                    placeholder="Rejection reason (optional)"
+                    className="w-full rounded-lg border border-jarvis/30 bg-black/20 px-2 py-1 text-xs text-foreground outline-none"
+                  />
+                  <div className="mt-2 flex gap-2">
+                    <button
+                      disabled={busy}
+                      onClick={() => submitReview(a.id, "rejected")}
+                      className="rounded-lg border border-destructive/60 px-2 py-1 text-[11px] font-semibold text-destructive disabled:opacity-60"
+                    >
+                      {busy ? "REJECTING…" : "CONFIRM REJECTION"}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setRejecting(null);
+                        setNote("");
+                      }}
+                      className="rounded-lg border border-jarvis/30 px-2 py-1 text-[11px] text-jarvis/70"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      setRejecting(null);
+                      setApproving(a.id);
+                    }}
+                    className="rounded-lg border border-jarvis/40 px-2 py-1 text-[11px] font-semibold tracking-widest text-jarvis"
+                  >
+                    APPROVE
+                  </button>
+                  <button
+                    onClick={() => {
+                      setApproving(null);
+                      setRejecting(a.id);
+                    }}
+                    className="rounded-lg border border-destructive/50 px-2 py-1 text-[11px] font-semibold tracking-widest text-destructive"
+                  >
+                    REJECT
+                  </button>
+                </div>
+              )}
             </div>
+          ) : null}
+          {a.status !== "pending" ? (
+            <p className="mt-1 text-[11px] text-muted-foreground">
+              Reviewed{a.review_note ? ` — ${a.review_note}` : ""}
+            </p>
           ) : null}
         </Card>
       ))}

@@ -116,7 +116,7 @@ export async function createGroup(userId: string, name: string, memberIds: strin
     .single();
   if (error || !chat) {
     console.error("createGroup failed", error);
-    throw new Error("Could not create the group");
+    throw new Error(error?.message ?? "Could not create the group");
   }
 
   const { error: selfError } = await supabase
@@ -125,7 +125,7 @@ export async function createGroup(userId: string, name: string, memberIds: strin
   if (selfError) {
     console.error("groupSelfMember failed", selfError);
     await supabase.from("chats").delete().eq("id", chat.id);
-    throw new Error("Could not create the group");
+    throw new Error(selfError.message);
   }
 
   if (memberIds.length) {
@@ -134,7 +134,7 @@ export async function createGroup(userId: string, name: string, memberIds: strin
       .insert(memberIds.map((id) => ({ chat_id: chat.id, user_id: id })));
     if (memberError) {
       console.error("groupMembers failed", memberError);
-      throw new Error("Group created, but some members could not be added");
+      throw new Error(`Group created, but members could not be added: ${memberError.message}`);
     }
   }
   return chat.id;

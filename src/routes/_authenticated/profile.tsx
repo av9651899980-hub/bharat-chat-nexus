@@ -27,6 +27,7 @@ function ProfilePage() {
   const [bio, setBio] = useState("");
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
+  const [applying, setApplying] = useState(false);
 
   const profile = data?.profile as
     | { display_name: string; username: string; mobile: string | null; bio: string | null }
@@ -60,7 +61,7 @@ function ProfilePage() {
       .eq("id", userId);
     setSaving(false);
     if (error) {
-      toast.error("Could not save your profile");
+      toast.error(`Could not save your profile: ${error.message}`);
       return;
     }
     setDisplayName("");
@@ -73,11 +74,17 @@ function ProfilePage() {
       toast.error("Tell us a bit more (at least 10 characters)");
       return;
     }
+    if (application?.status === "pending") {
+      toast.error("You already have a pending application");
+      return;
+    }
+    setApplying(true);
     const { error } = await supabase
       .from("staff_applications")
       .insert({ user_id: userId, reason: reason.trim().slice(0, 500) });
+    setApplying(false);
     if (error) {
-      toast.error("Could not submit your application");
+      toast.error(`Application failed: ${error.message}`);
       return;
     }
     setReason("");
@@ -130,13 +137,19 @@ function ProfilePage() {
 
       <section className="mt-4 space-y-2 rounded-2xl border border-border bg-card p-4 shadow-soft">
         <p className="text-sm font-semibold">Staff application</p>
-        {application ? (
+        {application && application.status !== "rejected" ? (
           <p className="text-sm text-muted-foreground">
             Status: <span className="font-semibold text-foreground">{application.status}</span>
             {application.review_note ? ` — ${application.review_note}` : ""}
           </p>
         ) : (
           <>
+            {application?.status === "rejected" ? (
+              <p className="text-xs text-muted-foreground">
+                Your last application was rejected
+                {application.review_note ? ` — ${application.review_note}` : ""}. You can apply again.
+              </p>
+            ) : null}
             <textarea
               value={reason}
               onChange={(e) => setReason(e.target.value)}
@@ -146,9 +159,10 @@ function ProfilePage() {
             />
             <button
               onClick={apply}
-              className="w-full rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground"
+              disabled={applying}
+              className="w-full rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground disabled:opacity-60"
             >
-              Apply for staff
+              {applying ? "Submitting…" : "Apply for staff"}
             </button>
           </>
         )}

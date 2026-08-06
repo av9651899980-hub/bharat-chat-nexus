@@ -239,7 +239,7 @@ export const jarvisStaff = createServerFn({ method: "POST" })
     const [{ data: applications }, { data: roles }] = await Promise.all([
       supabaseAdmin
         .from("staff_applications")
-        .select("id, user_id, reason, status, created_at, profiles:user_id(display_name, username)")
+        .select("id, user_id, reason, status, review_note, created_at, profiles:user_id(display_name, username)")
         .order("created_at", { ascending: false }),
       supabaseAdmin
         .from("user_roles")
@@ -258,7 +258,12 @@ export const jarvisReviewApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) =>
     z
-      .object({ id: z.string().uuid(), status: z.enum(["approved", "rejected"]), note: z.string().max(300).optional() })
+      .object({
+        id: z.string().uuid(),
+        status: z.enum(["approved", "rejected"]),
+        note: z.string().max(300).optional(),
+        role: z.enum(["manager", "admin", "helper", "viewer"]).optional(),
+      })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
@@ -266,18 +271,30 @@ export const jarvisReviewApplication = createServerFn({ method: "POST" })
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertOwner(context.userId);
 
-    const { data: app } = await supabaseAdmin
+    if (data.status === "approved" && !data.role) {
+      throw new Error("Select a staff role before approving");
+    }
+
+    const { data: app, error: updateError } = await supabaseAdmin
       .from("staff_applications")
-      .update({ status: data.status, review_note: data.note ?? null, reviewed_at: new Date().toISOString() })
+      .update({
+        status: data.status,
+        review_note: data.note ?? null,
+        reviewed_at: new Date().toISOString(),
+        reviewed_by: context.userId,
+      })
       .eq("id", data.id)
       .select("user_id")
       .maybeSingle();
+    if (updateError) throw new Error(updateError.message);
 
     if (app?.user_id) {
-      if (data.status === "approved") {
-        await supabaseAdmin
+      if (data.status === "approved" && data.role) {
+        await supabaseAdmin.from("user_roles").delete().eq("user_id", app.user_id).neq("role", "owner");
+        const { error: roleError } = await supabaseAdmin
           .from("user_roles")
-          .upsert({ user_id: app.user_id, role: "viewer" }, { onConflict: "user_id,role" });
+          .upsert({ user_id: app.user_id, role: data.role }, { onConflict: "user_id,role" });
+        if (roleError) throw new Error(roleError.message);
       }
       await supabaseAdmin.from("notifications").insert({
         user_id: app.user_id,
@@ -285,8 +302,8 @@ export const jarvisReviewApplication = createServerFn({ method: "POST" })
         title: `Staff application ${data.status}`,
         body:
           data.status === "approved"
-            ? "Welcome to the team. Your staff role is now active."
-            : "Your staff application was not approved this time.",
+            ? `Welcome to the team. Your staff role is now ${data.role}.`
+            : `Your staff application was not approved.${data.note ? ` Reason: ${data.note}` : ""}`,
       });
     }
     return { ok: true as const };
