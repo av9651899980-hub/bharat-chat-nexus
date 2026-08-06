@@ -239,7 +239,7 @@ export const jarvisStaff = createServerFn({ method: "POST" })
     const [{ data: applications }, { data: roles }] = await Promise.all([
       supabaseAdmin
         .from("staff_applications")
-        .select("id, user_id, reason, status, created_at, profiles:user_id(display_name, username)")
+        .select("id, user_id, reason, status, review_note, created_at, profiles:user_id(display_name, username)")
         .order("created_at", { ascending: false }),
       supabaseAdmin
         .from("user_roles")
