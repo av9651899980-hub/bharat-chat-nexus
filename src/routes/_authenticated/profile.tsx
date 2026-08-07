@@ -148,10 +148,16 @@ function ProfilePage() {
 
       <section className="mt-4 space-y-2 rounded-2xl border border-border bg-card p-4 shadow-soft">
         <p className="text-sm font-semibold">Staff application</p>
-        {application && application.status !== "rejected" ? (
+        {appLoading ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : hasPending ? (
           <p className="text-sm text-muted-foreground">
-            Status: <span className="font-semibold text-foreground">{application.status}</span>
-            {application.review_note ? ` — ${application.review_note}` : ""}
+            Status: <span className="font-semibold text-foreground">pending</span> — JARVIS will review it soon.
+          </p>
+        ) : isStaff ? (
+          <p className="text-sm text-muted-foreground">
+            You are staff. Current rank:{" "}
+            <span className="font-semibold uppercase text-foreground">{currentRole}</span>
           </p>
         ) : (
           <>
@@ -159,6 +165,10 @@ function ProfilePage() {
               <p className="text-xs text-muted-foreground">
                 Your last application was rejected
                 {application.review_note ? ` — ${application.review_note}` : ""}. You can apply again.
+              </p>
+            ) : application?.status === "approved" ? (
+              <p className="text-xs text-muted-foreground">
+                Your previous application was approved but you no longer hold a staff rank. You can apply again.
               </p>
             ) : null}
             <textarea
@@ -168,9 +178,14 @@ function ProfilePage() {
               placeholder="Why do you want to join the BharatChat staff team?"
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
             />
+            <p className="text-[11px] text-muted-foreground">
+              {reason.trim().length < 10
+                ? `Write at least 10 characters (${reason.trim().length}/10).`
+                : "Ready to send."}
+            </p>
             <button
               onClick={apply}
-              disabled={applying}
+              disabled={applying || !canApply || reason.trim().length < 10}
               className="w-full rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground disabled:opacity-60"
             >
               {applying ? "Submitting…" : "Apply for staff"}
