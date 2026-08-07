@@ -34,6 +34,7 @@ function ProfilePage() {
     | null
     | undefined;
 
+
   const { data: application, isLoading: appLoading } = useQuery({
     queryKey: ["my-application", userId],
     enabled: !!userId,
