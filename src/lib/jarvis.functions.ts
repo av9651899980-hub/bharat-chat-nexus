@@ -104,9 +104,9 @@ export const jarvisSetUserStatus = createServerFn({ method: "POST" })
 export const jarvisChats = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "view_chats");
 
     const { data: chats } = await supabaseAdmin
       .from("chats")
@@ -129,9 +129,9 @@ export const jarvisChatMessages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ chatId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "view_chats");
     const { data: messages } = await supabaseAdmin
       .from("messages")
       .select("id, content, kind, created_at, edited_at, deleted_at, profiles:sender_id(display_name)")
@@ -144,9 +144,9 @@ export const jarvisChatMessages = createServerFn({ method: "POST" })
 export const jarvisGroups = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "view_chats");
 
     const { data: groups } = await supabaseAdmin
       .from("chats")
@@ -192,9 +192,16 @@ export const jarvisGroupAction = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(
+      context.userId,
+      data.action === "delete"
+        ? "delete_group"
+        : data.action === "update"
+          ? "manage_group_settings"
+          : "manage_group_members",
+    );
 
     if (data.action === "delete") {
       await supabaseAdmin.from("chats").delete().eq("id", data.groupId);
@@ -235,9 +242,9 @@ export const jarvisGroupAction = createServerFn({ method: "POST" })
 export const jarvisStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "view_staff_panel");
 
     const [{ data: applications }, { data: roles }] = await Promise.all([
       supabaseAdmin
@@ -350,9 +357,9 @@ export const jarvisSetRole = createServerFn({ method: "POST" })
 export const jarvisReports = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "view_reports");
     const { data } = await supabaseAdmin
       .from("reports")
       .select(
@@ -387,9 +394,9 @@ export const jarvisUpdateReport = createServerFn({ method: "POST" })
 export const jarvisAnnouncements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "view_staff_panel");
     const { data } = await supabaseAdmin
       .from("announcements")
       .select("*")
