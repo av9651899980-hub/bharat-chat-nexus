@@ -34,20 +34,27 @@ function ProfilePage() {
     | null
     | undefined;
 
-  const { data: application } = useQuery({
+
+  const { data: application, isLoading: appLoading } = useQuery({
     queryKey: ["my-application", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data: app } = await supabase
+      const { data: app, error } = await supabase
         .from("staff_applications")
         .select("*")
         .eq("user_id", userId!)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      if (error) throw error;
       return app;
     },
   });
+
+  const hasPending = application?.status === "pending";
+  const currentRole = data?.role ?? null;
+  const isStaff = !!currentRole;
+  const canApply = !hasPending && !isStaff;
 
   async function save() {
     if (!userId) return;
@@ -70,11 +77,15 @@ function ProfilePage() {
   }
 
   async function apply() {
-    if (!userId || reason.trim().length < 10) {
+    if (!userId) {
+      toast.error("You need to be signed in to apply");
+      return;
+    }
+    if (reason.trim().length < 10) {
       toast.error("Tell us a bit more (at least 10 characters)");
       return;
     }
-    if (application?.status === "pending") {
+    if (hasPending) {
       toast.error("You already have a pending application");
       return;
     }
@@ -89,7 +100,7 @@ function ProfilePage() {
     }
     setReason("");
     toast.success("Application sent to JARVIS");
-    queryClient.invalidateQueries({ queryKey: ["my-application", userId] });
+    await queryClient.invalidateQueries({ queryKey: ["my-application", userId] });
   }
 
   async function signOut() {
@@ -137,10 +148,16 @@ function ProfilePage() {
 
       <section className="mt-4 space-y-2 rounded-2xl border border-border bg-card p-4 shadow-soft">
         <p className="text-sm font-semibold">Staff application</p>
-        {application && application.status !== "rejected" ? (
+        {appLoading ? (
+          <p className="text-sm text-muted-foreground">Loading…</p>
+        ) : hasPending ? (
           <p className="text-sm text-muted-foreground">
-            Status: <span className="font-semibold text-foreground">{application.status}</span>
-            {application.review_note ? ` — ${application.review_note}` : ""}
+            Status: <span className="font-semibold text-foreground">pending</span> — JARVIS will review it soon.
+          </p>
+        ) : isStaff ? (
+          <p className="text-sm text-muted-foreground">
+            You are staff. Current rank:{" "}
+            <span className="font-semibold uppercase text-foreground">{currentRole}</span>
           </p>
         ) : (
           <>
@@ -148,6 +165,10 @@ function ProfilePage() {
               <p className="text-xs text-muted-foreground">
                 Your last application was rejected
                 {application.review_note ? ` — ${application.review_note}` : ""}. You can apply again.
+              </p>
+            ) : application?.status === "approved" ? (
+              <p className="text-xs text-muted-foreground">
+                Your previous application was approved but you no longer hold a staff rank. You can apply again.
               </p>
             ) : null}
             <textarea
@@ -157,9 +178,14 @@ function ProfilePage() {
               placeholder="Why do you want to join the BharatChat staff team?"
               className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm outline-none focus:border-ring"
             />
+            <p className="text-[11px] text-muted-foreground">
+              {reason.trim().length < 10
+                ? `Write at least 10 characters (${reason.trim().length}/10).`
+                : "Ready to send."}
+            </p>
             <button
               onClick={apply}
-              disabled={applying}
+              disabled={applying || !canApply || reason.trim().length < 10}
               className="w-full rounded-xl bg-secondary px-4 py-2.5 text-sm font-semibold text-secondary-foreground disabled:opacity-60"
             >
               {applying ? "Submitting…" : "Apply for staff"}
