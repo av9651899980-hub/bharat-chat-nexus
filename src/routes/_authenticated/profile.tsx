@@ -34,17 +34,18 @@ function ProfilePage() {
     | null
     | undefined;
 
-  const { data: application } = useQuery({
+  const { data: application, isLoading: appLoading } = useQuery({
     queryKey: ["my-application", userId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data: app } = await supabase
+      const { data: app, error } = await supabase
         .from("staff_applications")
         .select("*")
         .eq("user_id", userId!)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
+      if (error) throw error;
       return app;
     },
   });
@@ -70,11 +71,15 @@ function ProfilePage() {
   }
 
   async function apply() {
-    if (!userId || reason.trim().length < 10) {
+    if (!userId) {
+      toast.error("You need to be signed in to apply");
+      return;
+    }
+    if (reason.trim().length < 10) {
       toast.error("Tell us a bit more (at least 10 characters)");
       return;
     }
-    if (application?.status === "pending") {
+    if (hasPending) {
       toast.error("You already have a pending application");
       return;
     }
@@ -89,7 +94,7 @@ function ProfilePage() {
     }
     setReason("");
     toast.success("Application sent to JARVIS");
-    queryClient.invalidateQueries({ queryKey: ["my-application", userId] });
+    await queryClient.invalidateQueries({ queryKey: ["my-application", userId] });
   }
 
   async function signOut() {
