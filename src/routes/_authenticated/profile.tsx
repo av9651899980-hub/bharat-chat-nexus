@@ -51,6 +51,11 @@ function ProfilePage() {
     },
   });
 
+  const hasPending = application?.status === "pending";
+  const currentRole = data?.role ?? null;
+  const isStaff = !!currentRole;
+  const canApply = !hasPending && !isStaff;
+
   async function save() {
     if (!userId) return;
     setSaving(true);
