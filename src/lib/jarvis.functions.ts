@@ -81,9 +81,12 @@ export const jarvisSetUserStatus = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(
+      context.userId,
+      data.status === "suspended" ? "suspend_user" : "restrict_user",
+    );
     const { error } = await supabaseAdmin
       .from("profiles")
       .update({ status: data.status })
@@ -101,9 +104,9 @@ export const jarvisSetUserStatus = createServerFn({ method: "POST" })
 export const jarvisChats = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "view_chats");
 
     const { data: chats } = await supabaseAdmin
       .from("chats")
@@ -126,9 +129,9 @@ export const jarvisChatMessages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ chatId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "view_chats");
     const { data: messages } = await supabaseAdmin
       .from("messages")
       .select("id, content, kind, created_at, edited_at, deleted_at, profiles:sender_id(display_name)")
@@ -141,9 +144,9 @@ export const jarvisChatMessages = createServerFn({ method: "POST" })
 export const jarvisGroups = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "view_chats");
 
     const { data: groups } = await supabaseAdmin
       .from("chats")
@@ -189,9 +192,16 @@ export const jarvisGroupAction = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(
+      context.userId,
+      data.action === "delete"
+        ? "delete_group"
+        : data.action === "update"
+          ? "manage_group_settings"
+          : "manage_group_members",
+    );
 
     if (data.action === "delete") {
       await supabaseAdmin.from("chats").delete().eq("id", data.groupId);
@@ -232,9 +242,9 @@ export const jarvisGroupAction = createServerFn({ method: "POST" })
 export const jarvisStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "view_staff_panel");
 
     const [{ data: applications }, { data: roles }] = await Promise.all([
       supabaseAdmin
@@ -267,9 +277,9 @@ export const jarvisReviewApplication = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "review_staff_applications");
 
     if (data.status === "approved" && !data.role) {
       throw new Error("Select a staff role before approving");
@@ -289,12 +299,17 @@ export const jarvisReviewApplication = createServerFn({ method: "POST" })
     if (updateError) throw new Error(updateError.message);
 
     if (app?.user_id) {
+      let granted: string[] = [];
       if (data.status === "approved" && data.role) {
         await supabaseAdmin.from("user_roles").delete().eq("user_id", app.user_id).neq("role", "owner");
         const { error: roleError } = await supabaseAdmin
           .from("user_roles")
           .upsert({ user_id: app.user_id, role: data.role }, { onConflict: "user_id,role" });
         if (roleError) throw new Error(roleError.message);
+        // Clear stale per-user overrides so the new rank's defaults apply immediately.
+        await supabaseAdmin.from("user_permission_overrides").delete().eq("user_id", app.user_id);
+        const { getEffectivePermissions } = await import("./permissions.server");
+        granted = await getEffectivePermissions(app.user_id);
       }
       await supabaseAdmin.from("notifications").insert({
         user_id: app.user_id,
@@ -302,7 +317,7 @@ export const jarvisReviewApplication = createServerFn({ method: "POST" })
         title: `Staff application ${data.status}`,
         body:
           data.status === "approved"
-            ? `Welcome to the team. Your staff role is now ${data.role}.`
+            ? `Welcome to the team. Your staff role is now ${data.role}. You now hold ${granted.length} permission${granted.length === 1 ? "" : "s"}.`
             : `Your staff application was not approved.${data.note ? ` Reason: ${data.note}` : ""}`,
       });
     }
@@ -320,12 +335,13 @@ export const jarvisSetRole = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "assign_roles");
     if (data.userId === context.userId) throw new Error("You cannot change your own authority");
 
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId).neq("role", "owner");
+    await supabaseAdmin.from("user_permission_overrides").delete().eq("user_id", data.userId);
     if (data.role !== "none") {
       await supabaseAdmin.from("user_roles").insert({ user_id: data.userId, role: data.role });
     }
@@ -341,9 +357,9 @@ export const jarvisSetRole = createServerFn({ method: "POST" })
 export const jarvisReports = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "view_reports");
     const { data } = await supabaseAdmin
       .from("reports")
       .select(
@@ -365,9 +381,9 @@ export const jarvisUpdateReport = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "resolve_reports");
     await supabaseAdmin
       .from("reports")
       .update({ status: data.status, action_note: data.note ?? null })
@@ -378,9 +394,9 @@ export const jarvisUpdateReport = createServerFn({ method: "POST" })
 export const jarvisAnnouncements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "view_staff_panel");
     const { data } = await supabaseAdmin
       .from("announcements")
       .select("*")
@@ -394,9 +410,9 @@ export const jarvisAnnounce = createServerFn({ method: "POST" })
     z.object({ title: z.string().trim().min(2).max(80), body: z.string().trim().min(2).max(1000) }).parse(input),
   )
   .handler(async ({ data, context }) => {
-    const { assertOwner } = await import("./jarvis.server");
+    const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await assertOwner(context.userId);
+    await assertPermission(context.userId, "send_announcement");
 
     await supabaseAdmin.from("announcements").insert({ title: data.title, body: data.body });
     const { data: users } = await supabaseAdmin.from("profiles").select("id").eq("is_system", false);
