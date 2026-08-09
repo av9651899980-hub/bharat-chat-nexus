@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Bell, MessageCircle, Users, User } from "lucide-react";
+import { Bell, MessageCircle, Users, User, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -28,6 +28,14 @@ export function AppShell({
 }) {
   const { userId, data } = useAccount();
   const navigate = useNavigate();
+  const isStaff = (data?.roles?.length ?? 0) > 0;
+
+  const navItems = [
+    { to: "/chats", label: "Chats", icon: MessageCircle },
+    { to: "/groups", label: "Groups", icon: Users },
+    { to: "/profile", label: "Profile", icon: User },
+    ...(isStaff ? [{ to: "/powers", label: "Powers", icon: ShieldCheck }] : []),
+  ];
 
   const { data: unread } = useQuery({
     queryKey: ["unread-notifications", userId],
@@ -71,12 +79,10 @@ export function AppShell({
 
       {showNav ? (
         <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-background/95 backdrop-blur">
-          <div className="mx-auto grid w-full max-w-xl grid-cols-3">
-            {[
-              { to: "/chats", label: "Chats", icon: MessageCircle },
-              { to: "/groups", label: "Groups", icon: Users },
-              { to: "/profile", label: "Profile", icon: User },
-            ].map((item) => (
+          <div
+            className={`mx-auto grid w-full max-w-xl ${isStaff ? "grid-cols-4" : "grid-cols-3"}`}
+          >
+            {navItems.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
