@@ -19,6 +19,7 @@ import { Route as AuthenticatedGroupsRouteImport } from './routes/_authenticated
 import { Route as AuthenticatedNewRouteImport } from './routes/_authenticated/new'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedOmniversRouteImport } from './routes/_authenticated/omnivers'
+import { Route as AuthenticatedPowersRouteImport } from './routes/_authenticated/powers'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedCChatIdRouteImport } from './routes/_authenticated/c.$chatId'
 import { Route as AuthenticatedUUserIdRouteImport } from './routes/_authenticated/u.$userId'
@@ -73,6 +74,11 @@ const AuthenticatedOmniversRoute = AuthenticatedOmniversRouteImport.update({
   path: '/omnivers',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPowersRoute = AuthenticatedPowersRouteImport.update({
+  id: '/powers',
+  path: '/powers',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -99,6 +105,7 @@ export interface FileRoutesByFullPath {
   '/new': typeof AuthenticatedNewRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/omnivers': typeof AuthenticatedOmniversRoute
+  '/powers': typeof AuthenticatedPowersRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/c/$chatId': typeof AuthenticatedCChatIdRoute
   '/u/$userId': typeof AuthenticatedUUserIdRoute
@@ -113,6 +120,7 @@ export interface FileRoutesByTo {
   '/new': typeof AuthenticatedNewRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/omnivers': typeof AuthenticatedOmniversRoute
+  '/powers': typeof AuthenticatedPowersRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/c/$chatId': typeof AuthenticatedCChatIdRoute
   '/u/$userId': typeof AuthenticatedUUserIdRoute
@@ -129,6 +137,7 @@ export interface FileRoutesById {
   '/_authenticated/new': typeof AuthenticatedNewRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/omnivers': typeof AuthenticatedOmniversRoute
+  '/_authenticated/powers': typeof AuthenticatedPowersRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/c/$chatId': typeof AuthenticatedCChatIdRoute
   '/_authenticated/u/$userId': typeof AuthenticatedUUserIdRoute
@@ -145,6 +154,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/notifications'
     | '/omnivers'
+    | '/powers'
     | '/profile'
     | '/c/$chatId'
     | '/u/$userId'
@@ -159,6 +169,7 @@ export interface FileRouteTypes {
     | '/new'
     | '/notifications'
     | '/omnivers'
+    | '/powers'
     | '/profile'
     | '/c/$chatId'
     | '/u/$userId'
@@ -174,6 +185,7 @@ export interface FileRouteTypes {
     | '/_authenticated/new'
     | '/_authenticated/notifications'
     | '/_authenticated/omnivers'
+    | '/_authenticated/powers'
     | '/_authenticated/profile'
     | '/_authenticated/c/$chatId'
     | '/_authenticated/u/$userId'
@@ -259,6 +271,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedOmniversRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/powers': {
+      id: '/_authenticated/powers'
+      path: '/powers'
+      fullPath: '/powers'
+      preLoaderRoute: typeof AuthenticatedPowersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/profile': {
       id: '/_authenticated/profile'
       path: '/profile'
@@ -289,6 +308,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedNewRoute: typeof AuthenticatedNewRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedOmniversRoute: typeof AuthenticatedOmniversRoute
+  AuthenticatedPowersRoute: typeof AuthenticatedPowersRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedCChatIdRoute: typeof AuthenticatedCChatIdRoute
   AuthenticatedUUserIdRoute: typeof AuthenticatedUUserIdRoute
@@ -300,6 +320,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedNewRoute: AuthenticatedNewRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedOmniversRoute: AuthenticatedOmniversRoute,
+  AuthenticatedPowersRoute: AuthenticatedPowersRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedCChatIdRoute: AuthenticatedCChatIdRoute,
   AuthenticatedUUserIdRoute: AuthenticatedUUserIdRoute,
