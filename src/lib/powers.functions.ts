@@ -541,18 +541,17 @@ export const powersAnalytics = createServerFn({ method: "POST" })
     await authorize(context.userId, "view_analytics", "powers.view_analytics");
 
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const count = (t: "profiles" | "chats" | "messages" | "reports" | "staff_applications") =>
-      supabaseAdmin.from(t).select("id", { count: "exact", head: true });
+    const head = { count: "exact" as const, head: true };
 
     const [users, groups, direct, messages, recent, openReports, pendingApps, staff] =
       await Promise.all([
-        count("profiles").eq("is_system", false),
-        count("chats").eq("is_group", true),
-        count("chats").eq("is_group", false),
-        count("messages"),
-        count("messages").gte("created_at", since),
-        count("reports").eq("status", "open"),
-        count("staff_applications").eq("status", "pending"),
+        supabaseAdmin.from("profiles").select("id", head).eq("is_system", false),
+        supabaseAdmin.from("chats").select("id", head).eq("is_group", true),
+        supabaseAdmin.from("chats").select("id", head).eq("is_group", false),
+        supabaseAdmin.from("messages").select("id", head),
+        supabaseAdmin.from("messages").select("id", head).gte("created_at", since),
+        supabaseAdmin.from("reports").select("id", head).eq("status", "open"),
+        supabaseAdmin.from("staff_applications").select("id", head).eq("status", "pending"),
         supabaseAdmin.from("user_roles").select("role"),
       ]);
 
