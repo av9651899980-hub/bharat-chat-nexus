@@ -10,7 +10,7 @@ function JarvisMark() {
     <Link
       to="/omnivers"
       aria-label="JARVIS"
-      className="rounded-full border border-jarvis/60 bg-jarvis/10 px-3 py-1 text-[11px] font-semibold tracking-[0.2em] text-jarvis shadow-jarvis"
+      className="rounded-full border border-jarvis/60 bg-jarvis/10 px-3 py-1 text-[11px] font-semibold tracking-[0.2em] text-jarvis shadow-jarvis hover:bg-jarvis/20"
     >
       JARVIS
     </Link>
@@ -52,8 +52,9 @@ export function AppShell({
   });
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      <header className="sticky top-0 z-20 border-b border-border/70 bg-background/95 backdrop-blur">
+    <div className="relative flex min-h-screen flex-col bg-background">
+      <div aria-hidden className="surface-glow pointer-events-none fixed inset-x-0 top-0 h-64" />
+      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur-xl backdrop-saturate-150">
         <div className="mx-auto flex w-full max-w-xl items-center justify-between px-4 py-3">
           <button
             onClick={() => navigate({ to: "/chats" })}
@@ -75,10 +76,10 @@ export function AppShell({
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-xl flex-1 px-4 pb-28 pt-4">{children}</main>
+      <main className="relative mx-auto w-full max-w-xl flex-1 px-4 pb-28 pt-4">{children}</main>
 
       {showNav ? (
-        <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-background/95 backdrop-blur">
+        <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border/60 bg-background/80 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150">
           <div
             className={`mx-auto grid w-full max-w-xl ${isStaff ? "grid-cols-4" : "grid-cols-3"}`}
           >
