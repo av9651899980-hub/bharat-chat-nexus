@@ -21,6 +21,11 @@ import {
   jarvisAnnouncements,
   jarvisAnnounce,
 } from "@/lib/jarvis.functions";
+import {
+  jarvisStaffPermissionDetail,
+  jarvisSetUserPermission,
+  jarvisResetUserPermissions,
+} from "@/lib/permissions.functions";
 
 export const Route = createFileRoute("/_authenticated/omnivers")({
   head: () => ({
@@ -493,9 +498,132 @@ function StaffTab() {
               </button>
             ))}
           </div>
+          <button
+            onClick={() => setManaging(managing === s.user_id ? null : s.user_id)}
+            className="mt-2 w-full rounded-lg border border-jarvis/50 bg-jarvis/10 px-2 py-1.5 text-[11px] font-semibold tracking-widest text-jarvis transition-colors hover:bg-jarvis/20"
+          >
+            {managing === s.user_id ? "CLOSE PERMISSIONS" : "MANAGE PERMISSIONS"}
+          </button>
+          {managing === s.user_id ? <PermissionEditor userId={s.user_id} /> : null}
         </Card>
       ))}
     </>
+  );
+}
+
+function PermissionEditor({ userId }: { userId: string }) {
+  const detailFn = useServerFn(jarvisStaffPermissionDetail);
+  const setPermission = useServerFn(jarvisSetUserPermission);
+  const resetPermissions = useServerFn(jarvisResetUserPermissions);
+  const queryClient = useQueryClient();
+  const [pending, setPending] = useState<string | null>(null);
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["jarvis-permission-detail", userId],
+    queryFn: () => detailFn({ data: { userId } }),
+  });
+
+  async function apply(permission: string, mode: "grant" | "deny" | "inherit") {
+    setPending(permission + mode);
+    try {
+      await setPermission({ data: { userId, permission, mode } });
+      await queryClient.invalidateQueries({ queryKey: ["jarvis-permission-detail", userId] });
+      toast.success(
+        mode === "grant" ? "Permission granted" : mode === "deny" ? "Permission revoked" : "Reset to default",
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not update the permission");
+    } finally {
+      setPending(null);
+    }
+  }
+
+  if (isLoading) return <p className="mt-2 text-[11px] text-jarvis/60">Loading permissions…</p>;
+  if (error)
+    return (
+      <p className="mt-2 text-[11px] text-destructive">
+        {error instanceof Error ? error.message : "Could not load permissions"}
+      </p>
+    );
+  if (!data) return null;
+
+  const categories = [...new Set(data.permissions.map((p) => p.category))];
+  const overrideOf = (key: string) => data.overrides.find((o) => o.permission === key) ?? null;
+
+  return (
+    <div className="mt-3 space-y-3 rounded-2xl border border-jarvis/25 bg-black/20 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-[11px] uppercase tracking-widest text-jarvis/70">
+          Rank {data.role ?? "none"} · {data.effective.length} active
+        </p>
+        <button
+          onClick={async () => {
+            try {
+              await resetPermissions({ data: { userId } });
+              await queryClient.invalidateQueries({ queryKey: ["jarvis-permission-detail", userId] });
+              toast.success("Reset to rank defaults");
+            } catch (err) {
+              toast.error(err instanceof Error ? err.message : "Reset failed");
+            }
+          }}
+          className="rounded-lg border border-jarvis/40 px-2 py-1 text-[10px] font-semibold tracking-widest text-jarvis"
+        >
+          RESET TO DEFAULTS
+        </button>
+      </div>
+
+      {categories.map((category) => (
+        <div key={category} className="space-y-1.5">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-jarvis/50">{category}</p>
+          {data.permissions
+            .filter((p) => p.category === category)
+            .map((p) => {
+              const override = overrideOf(p.key);
+              const active = data.effective.includes(p.key);
+              return (
+                <div
+                  key={p.key}
+                  className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-jarvis/20 bg-card/50 px-2.5 py-2"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-xs font-medium text-foreground">{p.label}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {override
+                        ? override.granted
+                          ? "custom grant"
+                          : "custom revoke"
+                        : data.roleDefaults.includes(p.key)
+                          ? "rank default"
+                          : "not in rank"}
+                      {active ? " · active" : ""}
+                    </p>
+                  </div>
+                  <div className="flex gap-1">
+                    {(["grant", "deny", "inherit"] as const).map((mode) => {
+                      const selected =
+                        mode === "inherit" ? !override : override?.granted === (mode === "grant");
+                      return (
+                        <button
+                          key={mode}
+                          disabled={pending === p.key + mode}
+                          onClick={() => apply(p.key, mode)}
+                          className={`rounded-lg border px-2 py-1 text-[10px] font-semibold uppercase transition-colors disabled:opacity-50 ${
+                            selected
+                              ? "border-jarvis bg-jarvis/15 text-jarvis"
+                              : "border-jarvis/25 text-jarvis/60 hover:border-jarvis/50"
+                          }`}
+                        >
+                          {mode === "inherit" ? "default" : mode}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      ))}
+    </div>
   );
 }
 
