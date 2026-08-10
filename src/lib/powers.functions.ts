@@ -292,12 +292,10 @@ export const powersStaff = createServerFn({ method: "POST" })
         .limit(100),
     ]);
 
-    const visible = await filterVisibleStaff(
-      context.userId,
-      (roles ?? []).filter(
-        (r) => !((r.profiles as { is_system?: boolean } | null)?.is_system ?? false),
-      ) as (typeof roles extends null ? never : NonNullable<typeof roles>[number] & { user_id: string; role: string })[],
-    );
+    const staffRows = (roles ?? [])
+      .filter((r) => !((r.profiles as { is_system?: boolean } | null)?.is_system ?? false))
+      .map((r) => ({ ...r, user_id: r.user_id as string, role: r.role as string }));
+    const visible = await filterVisibleStaff(context.userId, staffRows);
 
     return { staff: visible, applications: applications ?? [] };
   });
