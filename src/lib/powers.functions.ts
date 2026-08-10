@@ -167,6 +167,17 @@ export const powersDeleteMessage = createServerFn({ method: "POST" })
     const { authorize, logActivity } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await authorize(context.userId, "delete_message", "powers.delete_message");
+
+    const { data: message } = await supabaseAdmin
+      .from("messages")
+      .select("sender_id")
+      .eq("id", data.messageId)
+      .maybeSingle();
+    if (message?.sender_id && message.sender_id !== context.userId) {
+      const { assertOutranksLogged } = await import("./powers.server");
+      await assertOutranksLogged(context.userId, message.sender_id, "powers.delete_message");
+    }
+
     const { error } = await supabaseAdmin
       .from("messages")
       .update({ deleted_at: new Date().toISOString(), content: null, audio_url: null })
