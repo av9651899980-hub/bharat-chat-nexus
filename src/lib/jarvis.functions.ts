@@ -82,11 +82,13 @@ export const jarvisSetUserStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { assertPermission } = await import("./permissions.server");
+    const { assertOutranksLogged, logActivity } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(
       context.userId,
       data.status === "suspended" ? "suspend_user" : "restrict_user",
     );
+    await assertOutranksLogged(context.userId, data.userId, `jarvis.set_status.${data.status}`);
     const { error } = await supabaseAdmin
       .from("profiles")
       .update({ status: data.status })
@@ -97,6 +99,12 @@ export const jarvisSetUserStatus = createServerFn({ method: "POST" })
       kind: "account",
       title: "Account status updated",
       body: `Your account status is now ${data.status}.`,
+    });
+    await logActivity({
+      actorId: context.userId,
+      action: data.status === "active" ? "Restored account" : `Set account ${data.status}`,
+      targetType: "user",
+      targetId: data.userId,
     });
     return { ok: true as const };
   });
