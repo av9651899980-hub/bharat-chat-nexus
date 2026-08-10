@@ -167,6 +167,17 @@ export const powersDeleteMessage = createServerFn({ method: "POST" })
     const { authorize, logActivity } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await authorize(context.userId, "delete_message", "powers.delete_message");
+
+    const { data: message } = await supabaseAdmin
+      .from("messages")
+      .select("sender_id")
+      .eq("id", data.messageId)
+      .maybeSingle();
+    if (message?.sender_id && message.sender_id !== context.userId) {
+      const { assertOutranksLogged } = await import("./powers.server");
+      await assertOutranksLogged(context.userId, message.sender_id, "powers.delete_message");
+    }
+
     const { error } = await supabaseAdmin
       .from("messages")
       .update({ deleted_at: new Date().toISOString(), content: null, audio_url: null })
@@ -230,6 +241,10 @@ export const powersGroupAction = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     } else {
       if (!data.userId) throw new Error("Select a member first.");
+      // Hierarchy protection: group powers can never reach an equal or
+      // higher-ranked account (including the platform owner).
+      const { assertOutranksLogged } = await import("./powers.server");
+      await assertOutranksLogged(context.userId, data.userId, `powers.group.${data.action}`);
       if (data.action === "remove_member") {
         const { error } = await supabaseAdmin
           .from("chat_members")
@@ -262,7 +277,7 @@ export const powersGroupAction = createServerFn({ method: "POST" })
 export const powersStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { authorize } = await import("./powers.server");
+    const { authorize, filterVisibleStaff } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await authorize(context.userId, "view_staff_panel", "powers.view_staff");
 
@@ -277,12 +292,12 @@ export const powersStaff = createServerFn({ method: "POST" })
         .limit(100),
     ]);
 
-    return {
-      staff: (roles ?? []).filter(
-        (r) => !((r.profiles as { is_system?: boolean } | null)?.is_system ?? false),
-      ),
-      applications: applications ?? [],
-    };
+    const staffRows = (roles ?? [])
+      .filter((r) => !((r.profiles as { is_system?: boolean } | null)?.is_system ?? false))
+      .map((r) => ({ ...r, user_id: r.user_id as string, role: r.role as string }));
+    const visible = await filterVisibleStaff(context.userId, staffRows);
+
+    return { staff: visible, applications: applications ?? [] };
   });
 
 export const powersReviewApplication = createServerFn({ method: "POST" })

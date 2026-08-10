@@ -106,8 +106,12 @@
   --jarvis-muted: oklch(0.72 0.03 250);
   --gradient-brand: linear-gradient(135deg, oklch(0.46 0.11 168), oklch(0.6 0.13 150));
   --gradient-jarvis: linear-gradient(140deg, oklch(0.18 0.03 262), oklch(0.24 0.05 268));
+  --gradient-surface: linear-gradient(160deg, oklch(1 0 0 / 0.9), oklch(0.98 0.008 160 / 0.62));
+  --gradient-glow: radial-gradient(120% 80% at 50% 0%, oklch(0.46 0.11 168 / 0.1), transparent 70%);
   --shadow-soft: 0 6px 24px -12px oklch(0.3 0.05 165 / 0.35);
   --shadow-jarvis: 0 0 28px -6px oklch(0.83 0.15 85 / 0.35);
+  --shadow-elevate: 0 1px 1px oklch(0.3 0.05 165 / 0.04), 0 12px 32px -18px oklch(0.3 0.05 165 / 0.45);
+  --ease-smooth: cubic-bezier(0.22, 0.61, 0.36, 1);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -168,6 +172,30 @@
     color: var(--color-foreground);
     -webkit-tap-highlight-color: transparent;
     overscroll-behavior-y: none;
+    font-feature-settings: "cv02", "ss01";
+    letter-spacing: -0.011em;
+  }
+
+  button,
+  a {
+    transition:
+      transform 0.18s cubic-bezier(0.22, 0.61, 0.36, 1),
+      opacity 0.18s cubic-bezier(0.22, 0.61, 0.36, 1),
+      color 0.18s cubic-bezier(0.22, 0.61, 0.36, 1),
+      background-color 0.18s cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  button:active {
+    transform: scale(0.97);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
   }
 }
 
@@ -192,4 +220,28 @@
 
 @utility shadow-jarvis {
   box-shadow: var(--shadow-jarvis);
+}
+
+@utility surface-glass {
+  background-image: var(--gradient-surface);
+  backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-elevate);
+}
+
+@utility surface-glow {
+  background-image: var(--gradient-glow);
+}
+
+@utility press-scale {
+  transition:
+    transform 0.18s var(--ease-smooth),
+    background-color 0.18s var(--ease-smooth),
+    color 0.18s var(--ease-smooth),
+    box-shadow 0.18s var(--ease-smooth);
+}
+
+@utility press-scale-active {
+  transform: scale(0.97);
 }

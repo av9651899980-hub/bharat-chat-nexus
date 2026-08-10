@@ -65,6 +65,41 @@ export async function assertOutranks(actorId: string, targetId: string) {
   return true;
 }
 
+/**
+ * Hierarchy gate that records the denial. Hierarchy always wins over any
+ * custom permission grant, so every privileged action against another
+ * account must pass through here.
+ */
+export async function assertOutranksLogged(actorId: string, targetId: string, action: string) {
+  try {
+    await assertOutranks(actorId, targetId);
+  } catch (error) {
+    await logActivity({
+      actorId,
+      action,
+      targetType: "user",
+      targetId,
+      result: "denied",
+      detail: error instanceof Error ? error.message : "Hierarchy violation",
+    });
+    throw error;
+  }
+  return true;
+}
+
+/**
+ * Staff may only see staff strictly below their own authority; the owner
+ * sees everyone. Prevents lower ranks inheriting owner-level visibility.
+ */
+export async function filterVisibleStaff<T extends { user_id: string; role: string }>(
+  actorId: string,
+  rows: T[],
+): Promise<T[]> {
+  const actor = await rankOf(actorId);
+  if (actor >= RANK["owner"]!) return rows;
+  return rows.filter((r) => (RANK[r.role] ?? 0) < actor);
+}
+
 /** Roles a staff member is allowed to assign (strictly below their own rank). */
 export async function assignableRoles(actorId: string) {
   const rank = await rankOf(actorId);

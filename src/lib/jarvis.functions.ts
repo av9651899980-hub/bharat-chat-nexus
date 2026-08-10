@@ -82,11 +82,13 @@ export const jarvisSetUserStatus = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { assertPermission } = await import("./permissions.server");
+    const { assertOutranksLogged, logActivity } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(
       context.userId,
       data.status === "suspended" ? "suspend_user" : "restrict_user",
     );
+    await assertOutranksLogged(context.userId, data.userId, `jarvis.set_status.${data.status}`);
     const { error } = await supabaseAdmin
       .from("profiles")
       .update({ status: data.status })
@@ -97,6 +99,12 @@ export const jarvisSetUserStatus = createServerFn({ method: "POST" })
       kind: "account",
       title: "Account status updated",
       body: `Your account status is now ${data.status}.`,
+    });
+    await logActivity({
+      actorId: context.userId,
+      action: data.status === "active" ? "Restored account" : `Set account ${data.status}`,
+      targetType: "user",
+      targetId: data.userId,
     });
     return { ok: true as const };
   });
@@ -219,6 +227,10 @@ export const jarvisGroupAction = createServerFn({ method: "POST" })
       return { ok: true as const };
     }
     if (!data.userId) throw new Error("A member is required for this action");
+    {
+      const { assertOutranksLogged } = await import("./powers.server");
+      await assertOutranksLogged(context.userId, data.userId, `jarvis.group.${data.action}`);
+    }
     if (data.action === "add_member") {
       await supabaseAdmin
         .from("chat_members")
@@ -243,6 +255,7 @@ export const jarvisStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { assertPermission } = await import("./permissions.server");
+    const { filterVisibleStaff } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(context.userId, "view_staff_panel");
 
@@ -256,11 +269,13 @@ export const jarvisStaff = createServerFn({ method: "POST" })
         .select("user_id, role, profiles:user_id(display_name, username, is_system)"),
     ]);
 
+    const staffRows = (roles ?? [])
+      .filter((r) => !((r.profiles as { is_system?: boolean } | null)?.is_system ?? false))
+      .map((r) => ({ ...r, user_id: r.user_id as string, role: r.role as string }));
+
     return {
       applications: applications ?? [],
-      staff: (roles ?? []).filter(
-        (r) => !((r.profiles as { is_system?: boolean } | null)?.is_system ?? false),
-      ),
+      staff: await filterVisibleStaff(context.userId, staffRows),
     };
   });
 
@@ -278,11 +293,29 @@ export const jarvisReviewApplication = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { assertPermission } = await import("./permissions.server");
+    const { assignableRoles, assertOutranksLogged } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(context.userId, "review_staff_applications");
 
     if (data.status === "approved" && !data.role) {
       throw new Error("Select a staff role before approving");
+    }
+    if (data.status === "approved" && data.role) {
+      const allowed = await assignableRoles(context.userId);
+      if (!allowed.includes(data.role)) {
+        throw new Error("You cannot assign a rank at or above your own authority.");
+      }
+    }
+
+    {
+      const { data: applicant } = await supabaseAdmin
+        .from("staff_applications")
+        .select("user_id")
+        .eq("id", data.id)
+        .maybeSingle();
+      if (applicant?.user_id) {
+        await assertOutranksLogged(context.userId, applicant.user_id, "jarvis.review_application");
+      }
     }
 
     const { data: app, error: updateError } = await supabaseAdmin
@@ -336,9 +369,25 @@ export const jarvisSetRole = createServerFn({ method: "POST" })
   )
   .handler(async ({ data, context }) => {
     const { assertPermission } = await import("./permissions.server");
+    const { assertOutranksLogged, assignableRoles, logActivity } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(context.userId, "assign_roles");
     if (data.userId === context.userId) throw new Error("You cannot change your own authority");
+    await assertOutranksLogged(context.userId, data.userId, "jarvis.set_role");
+    if (data.role !== "none") {
+      const allowed = await assignableRoles(context.userId);
+      if (!allowed.includes(data.role)) {
+        await logActivity({
+          actorId: context.userId,
+          action: "Change staff role",
+          targetType: "user",
+          targetId: data.userId,
+          result: "denied",
+          detail: `Attempted to assign ${data.role}`,
+        });
+        throw new Error("You cannot assign a rank at or above your own authority.");
+      }
+    }
 
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.userId).neq("role", "owner");
     await supabaseAdmin.from("user_permission_overrides").delete().eq("user_id", data.userId);
@@ -350,6 +399,12 @@ export const jarvisSetRole = createServerFn({ method: "POST" })
       kind: "staff",
       title: "Staff role updated",
       body: data.role === "none" ? "Your staff role was removed." : `Your role is now ${data.role}.`,
+    });
+    await logActivity({
+      actorId: context.userId,
+      action: data.role === "none" ? "Removed staff role" : `Set staff role to ${data.role}`,
+      targetType: "user",
+      targetId: data.userId,
     });
     return { ok: true as const };
   });
