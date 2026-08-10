@@ -241,6 +241,10 @@ export const powersGroupAction = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     } else {
       if (!data.userId) throw new Error("Select a member first.");
+      // Hierarchy protection: group powers can never reach an equal or
+      // higher-ranked account (including the platform owner).
+      const { assertOutranksLogged } = await import("./powers.server");
+      await assertOutranksLogged(context.userId, data.userId, `powers.group.${data.action}`);
       if (data.action === "remove_member") {
         const { error } = await supabaseAdmin
           .from("chat_members")
@@ -273,7 +277,7 @@ export const powersGroupAction = createServerFn({ method: "POST" })
 export const powersStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { authorize } = await import("./powers.server");
+    const { authorize, filterVisibleStaff } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await authorize(context.userId, "view_staff_panel", "powers.view_staff");
 
@@ -288,12 +292,14 @@ export const powersStaff = createServerFn({ method: "POST" })
         .limit(100),
     ]);
 
-    return {
-      staff: (roles ?? []).filter(
+    const visible = await filterVisibleStaff(
+      context.userId,
+      (roles ?? []).filter(
         (r) => !((r.profiles as { is_system?: boolean } | null)?.is_system ?? false),
-      ),
-      applications: applications ?? [],
-    };
+      ) as (typeof roles extends null ? never : NonNullable<typeof roles>[number] & { user_id: string; role: string })[],
+    );
+
+    return { staff: visible, applications: applications ?? [] };
   });
 
 export const powersReviewApplication = createServerFn({ method: "POST" })
