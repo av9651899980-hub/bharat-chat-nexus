@@ -335,6 +335,7 @@ function StaffTab() {
   const [pickedRole, setPickedRole] = useState<"viewer" | "helper" | "admin" | "manager">("viewer");
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [managing, setManaging] = useState<string | null>(null);
 
   async function submitReview(id: string, status: "approved" | "rejected") {
     setBusy(true);
