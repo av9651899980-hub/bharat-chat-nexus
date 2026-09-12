@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { useAccount } from "@/hooks/useAccount";
 import { createGroup, loadChats, searchProfiles } from "@/lib/chat-client";
+import { ProfileAvatar } from "@/components/profile-avatar";
 
 export const Route = createFileRoute("/_authenticated/groups")({
   head: () => ({
@@ -104,7 +105,7 @@ function GroupsPage() {
                     selected.includes(p.id) ? "bg-primary/10 text-primary" : "bg-muted"
                   }`}
                 >
-                  <span>{p.display_name}</span>
+                  <span className="flex items-center gap-2"><ProfileAvatar src={p.avatar_url} name={p.display_name} className="size-8" textClassName="text-xs" />{p.display_name}</span>
                   <span className="text-xs text-muted-foreground">@{p.username}</span>
                 </button>
               </li>
@@ -136,9 +137,7 @@ function GroupsPage() {
                 params={{ chatId: g.id }}
                 className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-soft"
               >
-                <span className="flex size-11 items-center justify-center rounded-full bg-secondary text-sm font-bold text-secondary-foreground">
-                  {g.title.charAt(0).toUpperCase()}
-                </span>
+                <ProfileAvatar name={g.title} className="size-11 bg-secondary text-secondary-foreground" />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{g.title}</span>
                   <span className="block truncate text-xs text-muted-foreground">{g.subtitle}</span>

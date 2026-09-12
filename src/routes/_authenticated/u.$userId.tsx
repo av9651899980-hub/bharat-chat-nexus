@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { useAccount } from "@/hooks/useAccount";
 import { findOrCreateDirectChat, loadProfile } from "@/lib/chat-client";
+import { ProfileAvatar } from "@/components/profile-avatar";
 
 export const Route = createFileRoute("/_authenticated/u/$userId")({
   head: () => ({
@@ -59,9 +60,7 @@ function UserPreviewPage() {
         <p className="text-sm text-destructive">Unable to open this user. Please try again.</p>
       ) : (
         <div className="rounded-3xl border border-border bg-card p-6 text-center shadow-soft">
-          <span className="brand-gradient mx-auto flex size-20 items-center justify-center rounded-full text-2xl font-bold text-primary-foreground">
-            {profile.display_name.charAt(0).toUpperCase()}
-          </span>
+          <ProfileAvatar src={profile.avatar_url} name={profile.display_name} className="mx-auto size-20" textClassName="text-2xl" />
           <h1 className="mt-4 text-lg font-bold">{profile.display_name}</h1>
           <p className="text-sm text-muted-foreground">@{profile.username}</p>
           {profile.bio ? <p className="mt-3 text-sm">{profile.bio}</p> : null}
