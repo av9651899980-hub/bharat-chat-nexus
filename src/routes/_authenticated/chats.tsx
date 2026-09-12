@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { useAccount } from "@/hooks/useAccount";
 import { loadChats } from "@/lib/chat-client";
 import { supabase } from "@/integrations/supabase/client";
+import { ProfileAvatar } from "@/components/profile-avatar";
 
 export const Route = createFileRoute("/_authenticated/chats")({
   head: () => ({
@@ -97,9 +98,7 @@ function ChatsPage() {
                 params={{ chatId: chat.id }}
                 className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-soft"
               >
-                <span className="brand-gradient flex size-11 items-center justify-center rounded-full text-sm font-bold text-primary-foreground">
-                  {chat.title.charAt(0).toUpperCase()}
-                </span>
+                <ProfileAvatar src={chat.avatarUrl} name={chat.title} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-sm font-semibold">{chat.title}</span>
                   <span className="block truncate text-xs text-muted-foreground">{chat.subtitle}</span>

@@ -5,6 +5,7 @@ import { ArrowLeft, ChevronRight } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { useAccount } from "@/hooks/useAccount";
 import { searchProfiles } from "@/lib/chat-client";
+import { ProfileAvatar } from "@/components/profile-avatar";
 
 export const Route = createFileRoute("/_authenticated/new")({
   head: () => ({
@@ -61,9 +62,7 @@ function NewChatPage() {
                 onClick={() => navigate({ to: "/u/$userId", params: { userId: p.id } })}
                 className="flex w-full items-center gap-3 rounded-2xl border border-border bg-card p-3 text-left shadow-soft active:opacity-80"
               >
-                <span className="brand-gradient flex size-10 items-center justify-center rounded-full text-sm font-bold text-primary-foreground">
-                  {p.display_name.charAt(0).toUpperCase()}
-                </span>
+                <ProfileAvatar src={p.avatar_url} name={p.display_name} className="size-10" />
                 <span className="min-w-0 flex-1">
                   <span className="block text-sm font-semibold">{p.display_name}</span>
                   <span className="block text-xs text-muted-foreground">@{p.username}</span>

@@ -10,6 +10,7 @@ import { useAccount } from "@/hooks/useAccount";
 import { supabase } from "@/integrations/supabase/client";
 import { topRole, type AppRole } from "@/lib/identity";
 import { loadChats, searchProfiles } from "@/lib/chat-client";
+import { ProfileAvatar } from "@/components/profile-avatar";
 
 export const Route = createFileRoute("/_authenticated/c/$chatId")({
   head: () => ({
@@ -64,7 +65,7 @@ function ConversationPage() {
     queryFn: async () => {
       const { data } = await supabase
         .from("chat_members")
-        .select("user_id, is_admin, profiles:user_id(display_name, username, last_seen, status)")
+        .select("user_id, is_admin, profiles:user_id(display_name, username, avatar_url, last_seen, status)")
         .eq("chat_id", chatId);
       const ids = (data ?? []).map((m) => m.user_id);
       const { data: roles } = ids.length
@@ -76,6 +77,7 @@ function ConversationPage() {
         profile: m.profiles as unknown as {
           display_name: string;
           username: string;
+           avatar_url: string | null;
           last_seen: string;
           status: string;
         } | null,
@@ -266,12 +268,15 @@ function ConversationPage() {
         <button onClick={() => navigate({ to: "/chats" })} className="flex items-center gap-1 text-sm text-muted-foreground">
           <ArrowLeft className="size-4" /> Back
         </button>
-        <div className="text-right">
-          <p className="text-sm font-semibold">
-            {title}
-            {!isGroup ? <RoleBadge role={other?.role ?? null} /> : null}
-          </p>
-          <p className="text-[11px] text-muted-foreground">{presence}</p>
+        <div className="flex items-center gap-2 text-right">
+          {!isGroup ? <ProfileAvatar src={other?.profile?.avatar_url} name={title} className="size-9" textClassName="text-xs" /> : null}
+          <div>
+            <p className="text-sm font-semibold">
+              {title}
+              {!isGroup ? <RoleBadge role={other?.role ?? null} /> : null}
+            </p>
+            <p className="text-[11px] text-muted-foreground">{presence}</p>
+          </div>
         </div>
         <button onClick={() => setPanel((v) => !v)} aria-label="Conversation options">
           <MoreVertical className="size-5" />

@@ -6,6 +6,7 @@ export type ChatSummary = {
   title: string;
   subtitle: string;
   otherUserId: string | null;
+  avatarUrl: string | null;
   updatedAt: string;
 };
 
@@ -24,7 +25,7 @@ export async function loadChats(userId: string, isGroup: boolean): Promise<ChatS
   const [{ data: members }, { data: messages }] = await Promise.all([
     supabase
       .from("chat_members")
-      .select("chat_id, user_id, profiles:user_id(display_name, username)")
+      .select("chat_id, user_id, profiles:user_id(display_name, username, avatar_url)")
       .in("chat_id", chatIds),
     supabase
       .from("messages")
@@ -39,7 +40,7 @@ export async function loadChats(userId: string, isGroup: boolean): Promise<ChatS
       const chat = row.chats as unknown as { id: string; is_group: boolean; name: string | null; updated_at: string };
       const others = (members ?? []).filter((m) => m.chat_id === chat.id && m.user_id !== userId);
       const last = (messages ?? []).find((m) => m.chat_id === chat.id);
-      const other = others[0]?.profiles as { display_name?: string } | null | undefined;
+      const other = others[0]?.profiles as { display_name?: string; avatar_url?: string | null } | null | undefined;
       return {
         id: chat.id,
         isGroup: chat.is_group,
@@ -52,6 +53,7 @@ export async function loadChats(userId: string, isGroup: boolean): Promise<ChatS
               : (last.content ?? "")
           : "No messages yet",
         otherUserId: others[0]?.user_id ?? null,
+        avatarUrl: other?.avatar_url ?? null,
         updatedAt: last?.created_at ?? chat.updated_at,
       };
     })
@@ -156,7 +158,7 @@ export async function loadProfile(userId: string) {
 export async function searchProfiles(term: string, excludeId: string) {
   const { data } = await supabase
     .from("profiles")
-    .select("id, username, display_name")
+    .select("id, username, display_name, avatar_url")
     .eq("is_system", false)
     .neq("id", excludeId)
     .or(`username.ilike.%${term}%,display_name.ilike.%${term}%`)

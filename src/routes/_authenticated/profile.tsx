@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { RoleBadge } from "@/components/role-badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/hooks/useAccount";
+import { ProfileAvatar } from "@/components/profile-avatar";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -28,9 +29,11 @@ function ProfilePage() {
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [applying, setApplying] = useState(false);
+  const [photoBusy, setPhotoBusy] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const profile = data?.profile as
-    | { display_name: string; username: string; mobile: string | null; bio: string | null }
+    | { display_name: string; username: string; mobile: string | null; bio: string | null; avatar_url: string | null }
     | null
     | undefined;
 
@@ -76,6 +79,62 @@ function ProfilePage() {
     queryClient.invalidateQueries({ queryKey: ["account", userId] });
   }
 
+  async function changePhoto(file: File | undefined) {
+    if (!file || !userId) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Choose an image file");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Profile photos must be 5 MB or smaller");
+      return;
+    }
+
+    setPhotoBusy(true);
+    const extension = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    const path = `${userId}/${crypto.randomUUID()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from("profile-photos")
+      .upload(path, file, { contentType: file.type, upsert: false });
+    if (uploadError) {
+      setPhotoBusy(false);
+      toast.error(`Photo upload failed: ${uploadError.message}`);
+      return;
+    }
+
+    const oldPath = profile?.avatar_url;
+    const { error: profileError } = await supabase.from("profiles").update({ avatar_url: path }).eq("id", userId);
+    if (profileError) {
+      await supabase.storage.from("profile-photos").remove([path]);
+      setPhotoBusy(false);
+      toast.error(`Could not save your photo: ${profileError.message}`);
+      return;
+    }
+    if (oldPath && !oldPath.startsWith("http")) {
+      await supabase.storage.from("profile-photos").remove([oldPath]);
+    }
+    setPhotoBusy(false);
+    toast.success("Profile photo updated");
+    await queryClient.invalidateQueries({ queryKey: ["account", userId] });
+  }
+
+  async function removePhoto() {
+    if (!userId || !profile?.avatar_url) return;
+    setPhotoBusy(true);
+    const oldPath = profile.avatar_url;
+    const { error } = await supabase.from("profiles").update({ avatar_url: null }).eq("id", userId);
+    if (!error && !oldPath.startsWith("http")) {
+      await supabase.storage.from("profile-photos").remove([oldPath]);
+    }
+    setPhotoBusy(false);
+    if (error) {
+      toast.error(`Could not remove your photo: ${error.message}`);
+      return;
+    }
+    toast.success("Profile photo removed");
+    await queryClient.invalidateQueries({ queryKey: ["account", userId] });
+  }
+
   async function apply() {
     if (!userId) {
       toast.error("You need to be signed in to apply");
@@ -113,13 +172,43 @@ function ProfilePage() {
   return (
     <AppShell title="Profile">
       <section className="rounded-2xl border border-border bg-card p-4 shadow-soft">
-        <h1 className="text-xl font-bold">
-          {profile?.display_name ?? "Your profile"}
-          <RoleBadge role={data?.role ?? null} />
-        </h1>
-        <p className="text-sm text-muted-foreground">@{profile?.username}</p>
+        <div className="flex items-center gap-3">
+          <ProfileAvatar src={profile?.avatar_url} name={profile?.display_name} className="size-16" textClassName="text-2xl" />
+          <div className="min-w-0">
+            <h1 className="text-xl font-bold">
+              {profile?.display_name ?? "Your profile"}
+              <RoleBadge role={data?.role ?? null} />
+            </h1>
+            <p className="text-sm text-muted-foreground">@{profile?.username}</p>
+          </div>
+        </div>
         {profile?.mobile ? <p className="text-xs text-muted-foreground">{profile.mobile}</p> : null}
         {profile?.bio ? <p className="mt-2 text-sm">{profile.bio}</p> : null}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(event) => {
+            void changePhoto(event.target.files?.[0]);
+            event.currentTarget.value = "";
+          }}
+        />
+        <div className="mt-3 flex gap-2">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={photoBusy}
+            className="rounded-xl bg-secondary px-3 py-2 text-xs font-semibold text-secondary-foreground disabled:opacity-60"
+          >
+            {photoBusy ? "Saving photo…" : profile?.avatar_url ? "Change photo" : "Add photo"}
+          </button>
+          {profile?.avatar_url ? (
+            <button type="button" onClick={removePhoto} disabled={photoBusy} className="rounded-xl border border-border px-3 py-2 text-xs font-semibold text-destructive disabled:opacity-60">
+              Remove
+            </button>
+          ) : null}
+        </div>
       </section>
 
       <section className="mt-4 space-y-2 rounded-2xl border border-border bg-card p-4 shadow-soft">
