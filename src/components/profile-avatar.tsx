@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 type ProfileAvatarProps = {
-  src?: string | null;
-  name?: string | null;
-  className?: string;
-  textClassName?: string;
+  src?: string | null | undefined;
+  name?: string | null | undefined;
+  className?: string | undefined;
+  textClassName?: string | undefined;
 };
 
 export function ProfileAvatar({ src, name, className = "size-11", textClassName = "text-sm" }: ProfileAvatarProps) {
