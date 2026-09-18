@@ -1,5 +1,5 @@
 - [ ] Add owner-only JARVIS group management: list, search/filter, details, member/admin/settings actions, messages, moderation, activity logging.
 - [ ] Add secure owner user details: existing profile, role, groups, reports, moderation history; never expose/store plaintext passwords.
-- [ ] Add profile photo upload/change/remove and render photos in existing profile/chat surfaces.
+- [x] Add profile photo upload/change/remove and render photos in existing profile/chat surfaces.
 - [ ] Add real attachment upload/download messages for direct and group chats with progress/error states.
 - [ ] Verify typecheck and targeted browser/backend flows.
