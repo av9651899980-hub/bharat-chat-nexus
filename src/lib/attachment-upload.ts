@@ -22,8 +22,8 @@ export async function uploadAttachmentWithProgress(
 
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   const token = sessionData.session?.access_token;
-  const baseUrl = import.meta.env.VITE_SUPABASE_URL;
-  const publishableKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const baseUrl = import.meta.env["VITE_SUPABASE_URL"];
+  const publishableKey = import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
   if (sessionError || !token || !baseUrl || !publishableKey) {
     throw new Error("Your session expired. Please sign in again.");
   }
