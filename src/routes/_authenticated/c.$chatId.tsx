@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Send, MoreVertical, Check, CheckCheck, X } from "lucide-react";
+import { ArrowLeft, Send, MoreVertical, Check, CheckCheck, X, Paperclip, Loader2, FileText, Download } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { RoleBadge } from "@/components/role-badge";
@@ -11,6 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { topRole, type AppRole } from "@/lib/identity";
 import { loadChats, searchProfiles } from "@/lib/chat-client";
 import { ProfileAvatar } from "@/components/profile-avatar";
+import { formatAttachmentSize, uploadAttachmentWithProgress } from "@/lib/attachment-upload";
 
 export const Route = createFileRoute("/_authenticated/c/$chatId")({
   head: () => ({
@@ -32,6 +33,10 @@ type MessageRow = {
   content: string | null;
   audio_url: string | null;
   audio_duration: number | null;
+  attachment_url: string | null;
+  attachment_name: string | null;
+  attachment_mime: string | null;
+  attachment_size: number | null;
   reply_to: string | null;
   edited_at: string | null;
   deleted_at: string | null;
@@ -44,6 +49,7 @@ function ConversationPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const attachmentInputRef = useRef<HTMLInputElement | null>(null);
 
   const [draft, setDraft] = useState("");
   const [replyTo, setReplyTo] = useState<MessageRow | null>(null);
@@ -51,6 +57,7 @@ function ConversationPage() {
   const [active, setActive] = useState<MessageRow | null>(null);
   const [forwarding, setForwarding] = useState<MessageRow | null>(null);
   const [panel, setPanel] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const { data: chat } = useQuery({
     queryKey: ["chat", chatId],
@@ -205,6 +212,37 @@ function ConversationPage() {
     queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
   }
 
+  async function sendAttachment(file: File | undefined) {
+    if (!file || !userId || !canSend || uploadProgress !== null) return;
+    setUploadProgress(0);
+    let uploadedPath: string | null = null;
+    try {
+      const uploaded = await uploadAttachmentWithProgress(file, chatId, setUploadProgress);
+      uploadedPath = uploaded.path;
+      const { error } = await supabase.from("messages").insert({
+        chat_id: chatId,
+        sender_id: userId,
+        kind: "attachment",
+        content: file.name,
+        attachment_url: uploaded.path,
+        attachment_name: uploaded.name,
+        attachment_mime: uploaded.mime,
+        attachment_size: uploaded.size,
+        reply_to: replyTo?.id ?? null,
+      });
+      if (error) throw new Error(error.message);
+      setReplyTo(null);
+      await notifyOthers(`📎 ${file.name}`);
+      queryClient.invalidateQueries({ queryKey: ["messages", chatId] });
+      toast.success("File sent");
+    } catch (error) {
+      if (uploadedPath) await supabase.storage.from("chat-attachments").remove([uploadedPath]);
+      toast.error(error instanceof Error ? error.message : "File could not be sent");
+    } finally {
+      setUploadProgress(null);
+    }
+  }
+
   async function notifyOthers(text: string) {
     const others = (members ?? []).filter((m) => m.userId !== userId);
     if (!others.length) return;
@@ -304,8 +342,13 @@ function ConversationPage() {
           const readByOther = (reads ?? []).some((r) => r.message_id === m.id && r.user_id !== m.sender_id);
           return (
             <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-              <button
+              <div
                 onClick={() => setActive(m)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") setActive(m);
+                }}
+                role="button"
+                tabIndex={0}
                 className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-left shadow-soft ${
                   mine
                     ? "bg-bubble-out text-bubble-out-foreground"
@@ -327,6 +370,13 @@ function ConversationPage() {
                   <span className="text-sm italic opacity-70">This message was deleted</span>
                 ) : m.kind === "voice" && m.audio_url ? (
                   <VoicePlayer path={m.audio_url} duration={m.audio_duration} />
+                ) : m.kind === "attachment" && m.attachment_url ? (
+                  <AttachmentFile
+                    path={m.attachment_url}
+                    name={m.attachment_name ?? m.content ?? "Attachment"}
+                    mime={m.attachment_mime}
+                    size={m.attachment_size}
+                  />
                 ) : (
                   <span className="whitespace-pre-wrap break-words text-sm">{m.content}</span>
                 )}
@@ -344,7 +394,7 @@ function ConversationPage() {
                     ))}
                   </span>
                 ) : null}
-              </button>
+              </div>
             </div>
           );
         })}
@@ -414,6 +464,24 @@ function ConversationPage() {
           {canSend ? (
             <div className="flex items-center gap-2">
               <input
+                ref={attachmentInputRef}
+                type="file"
+                className="hidden"
+                onChange={(event) => {
+                  void sendAttachment(event.target.files?.[0]);
+                  event.currentTarget.value = "";
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => attachmentInputRef.current?.click()}
+                disabled={uploadProgress !== null}
+                aria-label="Attach a file"
+                className="flex size-11 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground disabled:opacity-60"
+              >
+                {uploadProgress !== null ? <Loader2 className="size-5 animate-spin" /> : <Paperclip className="size-5" />}
+              </button>
+              <input
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
@@ -428,8 +496,9 @@ function ConversationPage() {
               />
               <button
                 onClick={send}
+                disabled={uploadProgress !== null}
                 aria-label="Send message"
-                className="brand-gradient flex size-11 shrink-0 items-center justify-center rounded-full text-primary-foreground"
+                className="brand-gradient flex size-11 shrink-0 items-center justify-center rounded-full text-primary-foreground disabled:opacity-60"
               >
                 <Send className="size-5" />
               </button>
@@ -439,9 +508,75 @@ function ConversationPage() {
               Only group admins can send messages here.
             </p>
           )}
+          {uploadProgress !== null ? (
+            <div className="mt-2 space-y-1" aria-live="polite">
+              <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>Uploading file</span>
+                <span>{uploadProgress}%</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className="h-full rounded-full bg-primary transition-[width]" style={{ width: `${uploadProgress}%` }} />
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </AppShell>
+  );
+}
+
+function AttachmentFile({
+  path,
+  name,
+  mime,
+  size,
+}: {
+  path: string;
+  name: string;
+  mime: string | null;
+  size: number | null;
+}) {
+  const [url, setUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    supabase.storage
+      .from("chat-attachments")
+      .createSignedUrl(path, 60 * 60)
+      .then(({ data }) => {
+        if (active) setUrl(data?.signedUrl ?? null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [path]);
+
+  const isImage = mime?.startsWith("image/") ?? false;
+  return (
+    <div className="min-w-48 max-w-full" onClick={(event) => event.stopPropagation()}>
+      {isImage && url ? <img src={url} alt={name} className="mb-2 max-h-52 max-w-full rounded-xl object-cover" /> : null}
+      <div className="flex items-center gap-2">
+        <FileText className="size-5 shrink-0" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-medium">{name}</p>
+          <p className="text-[11px] opacity-70">{formatAttachmentSize(size)}</p>
+        </div>
+        {url ? (
+          <a
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            download={name}
+            aria-label={`Open ${name}`}
+            className="shrink-0 rounded-full p-1.5 hover:bg-background/40"
+          >
+            <Download className="size-4" />
+          </a>
+        ) : (
+          <Loader2 className="size-4 shrink-0 animate-spin opacity-70" />
+        )}
+      </div>
+    </div>
   );
 }
 
