@@ -269,6 +269,10 @@ export type Database = {
       }
       messages: {
         Row: {
+          attachment_mime: string | null
+          attachment_name: string | null
+          attachment_size: number | null
+          attachment_url: string | null
           audio_duration: number | null
           audio_url: string | null
           chat_id: string
@@ -283,6 +287,10 @@ export type Database = {
           sender_id: string
         }
         Insert: {
+          attachment_mime?: string | null
+          attachment_name?: string | null
+          attachment_size?: number | null
+          attachment_url?: string | null
           audio_duration?: number | null
           audio_url?: string | null
           chat_id: string
@@ -297,6 +305,10 @@ export type Database = {
           sender_id: string
         }
         Update: {
+          attachment_mime?: string | null
+          attachment_name?: string | null
+          attachment_size?: number | null
+          attachment_url?: string | null
           audio_duration?: number | null
           audio_url?: string | null
           chat_id?: string
