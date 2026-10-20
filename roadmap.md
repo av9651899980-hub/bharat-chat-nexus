@@ -1,5 +1,8 @@
 - [ ] Add owner-only JARVIS group management: list, search/filter, details, member/admin/settings actions, messages, moderation, activity logging.
 - [ ] Add secure owner user details: existing profile, role, groups, reports, moderation history; never expose/store plaintext passwords.
 - [x] Add profile photo upload/change/remove and render photos in existing profile/chat surfaces.
-- [ ] Add real attachment upload/download messages for direct and group chats with progress/error states.
-- [ ] Verify typecheck and targeted browser/backend flows.
+- [ ] Verify existing attachment upload/download flows without rebuilding them.
+- [ ] Apply cohesive dark-first premium styling to existing shared surfaces and groups.
+- [ ] Audit and strengthen group ownership, membership and send restrictions; improve group action errors.
+- [ ] Connect JARVIS conversation summaries to real AI with member-authorized data only.
+- [ ] Verify mobile layout, authorized/unauthorized boundaries, targeted tests and available diagnostics.

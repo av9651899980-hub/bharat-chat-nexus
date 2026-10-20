@@ -173,14 +173,15 @@ export const powersDeleteMessage = createServerFn({ method: "POST" })
       .select("sender_id")
       .eq("id", data.messageId)
       .maybeSingle();
-    if (message?.sender_id && message.sender_id !== context.userId) {
+    if (!message) throw new Error("Message not found.");
+    if (message.sender_id && message.sender_id !== context.userId) {
       const { assertOutranksLogged } = await import("./powers.server");
       await assertOutranksLogged(context.userId, message.sender_id, "powers.delete_message");
     }
 
     const { error } = await supabaseAdmin
       .from("messages")
-      .update({ deleted_at: new Date().toISOString(), content: null, audio_url: null })
+      .update({ deleted_at: new Date().toISOString(), content: null, audio_url: null, attachment_url: null, attachment_name: null, attachment_mime: null, attachment_size: null })
       .eq("id", data.messageId);
     if (error) throw new Error(error.message);
     await logActivity({
@@ -221,7 +222,7 @@ export const powersGroupAction = createServerFn({ method: "POST" })
 
     const { data: group } = await supabaseAdmin
       .from("chats")
-      .select("name, is_group")
+      .select("name, is_group, created_by")
       .eq("id", data.groupId)
       .maybeSingle();
     if (!group?.is_group) throw new Error("That conversation is not a group.");
@@ -241,6 +242,8 @@ export const powersGroupAction = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     } else {
       if (!data.userId) throw new Error("Select a member first.");
+      const { assertGroupOwnerProtected } = await import("./access-rules");
+      assertGroupOwnerProtected(group.created_by, data.userId, data.action);
       // Hierarchy protection: group powers can never reach an equal or
       // higher-ranked account (including the platform owner).
       const { assertOutranksLogged } = await import("./powers.server");
@@ -330,6 +333,11 @@ export const powersReviewApplication = createServerFn({ method: "POST" })
         throw new Error("You cannot assign a rank at or above your own authority.");
       }
     }
+
+    const { data: pending } = await supabaseAdmin.from("staff_applications").select("user_id, status").eq("id", data.id).maybeSingle();
+    if (!pending || pending.status !== "pending") throw new Error("This application is no longer pending.");
+    const { assertOutranksLogged } = await import("./powers.server");
+    await assertOutranksLogged(context.userId, pending.user_id, "powers.review_application");
 
     const { data: app, error } = await supabaseAdmin
       .from("staff_applications")
