@@ -9,6 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+import { Toaster } from "@/components/ui/sonner";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -87,8 +88,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "BharatChat — Simple, fast, secure messaging" },
       { name: "twitter:description", content: "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages." },
-      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a2bf7937-35bf-4880-88b1-70f7f8141351/id-preview-901208d1--93f964de-f9d5-4002-9fa2-16e7045d1afc.lovable.app-1785745340095.png" },
-      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a2bf7937-35bf-4880-88b1-70f7f8141351/id-preview-901208d1--93f964de-f9d5-4002-9fa2-16e7045d1afc.lovable.app-1785745340095.png" },
     ],
     links: [
       {
@@ -96,6 +95,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -125,6 +125,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <Toaster richColors theme="dark" />
     </QueryClientProvider>
   );
 }
