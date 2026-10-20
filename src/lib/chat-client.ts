@@ -111,35 +111,11 @@ export async function findOrCreateDirectChat(userId: string, otherUserId: string
 }
 
 export async function createGroup(userId: string, name: string, memberIds: string[]) {
-  const { data: chat, error } = await supabase
-    .from("chats")
-    .insert({ is_group: true, name, created_by: userId })
-    .select("id")
-    .single();
-  if (error || !chat) {
-    console.error("createGroup failed", error);
-    throw new Error(error?.message ?? "Could not create the group");
-  }
-
-  const { error: selfError } = await supabase
-    .from("chat_members")
-    .insert({ chat_id: chat.id, user_id: userId, is_admin: true });
-  if (selfError) {
-    console.error("groupSelfMember failed", selfError);
-    await supabase.from("chats").delete().eq("id", chat.id);
-    throw new Error(selfError.message);
-  }
-
-  if (memberIds.length) {
-    const { error: memberError } = await supabase
-      .from("chat_members")
-      .insert(memberIds.map((id) => ({ chat_id: chat.id, user_id: id })));
-    if (memberError) {
-      console.error("groupMembers failed", memberError);
-      throw new Error(`Group created, but members could not be added: ${memberError.message}`);
-    }
-  }
-  return chat.id;
+  const { data, error } = await supabase.rpc("create_group_atomic", {
+    _name: name, _members: [...new Set(memberIds)].filter(id => id !== userId),
+  });
+  if (error || !data) throw new Error(error?.message ?? "Could not create the group");
+  return data;
 }
 
 export async function loadProfile(userId: string) {
