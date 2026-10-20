@@ -667,6 +667,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_group_atomic: {
+        Args: { _members: string[]; _name: string }
+        Returns: string
+      }
       effective_permissions: {
         Args: { _user_id: string }
         Returns: {
