@@ -1,11 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, Users, Check, Search } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { useAccount } from "@/hooks/useAccount";
 import { createGroup, loadChats, searchProfiles } from "@/lib/chat-client";
+import { Button } from "@/components/ui/button";
 import { ProfileAvatar } from "@/components/profile-avatar";
 
 export const Route = createFileRoute("/_authenticated/groups")({
@@ -30,19 +31,20 @@ function GroupsPage() {
   const [selected, setSelected] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
 
-  const { data: groups, isLoading } = useQuery({
+  const { data: groups, isLoading, error: groupError } = useQuery({
     queryKey: ["groups", userId],
     enabled: !!userId,
-    queryFn: () => loadChats(userId!, true),
+    queryFn: () => loadChats(userId ?? "", true),
   });
 
   const { data: people } = useQuery({
     queryKey: ["people", term, userId],
     enabled: !!userId && creating && term.trim().length > 1,
-    queryFn: () => searchProfiles(term.trim(), userId!),
+    queryFn: () => searchProfiles(term.trim(), userId ?? ""),
   });
 
   async function submit() {
+    if (!userId) return;
     if (!name.trim()) {
       toast.error("Give the group a name");
       return;
@@ -53,7 +55,7 @@ function GroupsPage() {
     }
     setBusy(true);
     try {
-      const id = await createGroup(userId!, name.trim(), selected);
+      const id = await createGroup(userId, name.trim(), selected);
       await queryClient.invalidateQueries({ queryKey: ["groups"] });
       setCreating(false);
       setName("");
@@ -71,18 +73,19 @@ function GroupsPage() {
   return (
     <AppShell>
       <div className="flex items-center justify-between">
-        <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Groups</h2>
-        <button
-          onClick={() => setCreating((v) => !v)}
+        <div><h1 className="text-2xl font-bold">Groups</h1><p className="mt-1 text-xs text-muted-foreground">Your shared conversations</p></div>
+        <Button
+          variant="secondary" onClick={() => setCreating((v) => !v)}
           className="flex items-center gap-1 rounded-xl bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground"
         >
           <Plus className="size-3.5" /> New group
-        </button>
+        </Button>
       </div>
 
       {creating ? (
         <div className="mt-4 space-y-3 rounded-2xl border border-border bg-card p-4 shadow-soft">
           <input
+            aria-label="Group name" maxLength={60}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Group name"
@@ -91,13 +94,13 @@ function GroupsPage() {
           <input
             value={term}
             onChange={(e) => setTerm(e.target.value)}
-            placeholder="Search members by username"
+            aria-label="Search members" placeholder="Search members by username"
             className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm outline-none focus:border-ring"
           />
           <ul className="max-h-52 space-y-1 overflow-y-auto">
             {(people ?? []).map((p) => (
               <li key={p.id}>
-                <button
+                <Button
                   onClick={() =>
                     setSelected((s) => (s.includes(p.id) ? s.filter((x) => x !== p.id) : [...s, p.id]))
                   }
@@ -106,26 +109,26 @@ function GroupsPage() {
                   }`}
                 >
                   <span className="flex items-center gap-2"><ProfileAvatar src={p.avatar_url} name={p.display_name} className="size-8" textClassName="text-xs" />{p.display_name}</span>
-                  <span className="text-xs text-muted-foreground">@{p.username}</span>
-                </button>
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground">@{p.username}{selected.includes(p.id) ? <Check className="size-4 text-primary" /> : null}</span>
+                </Button>
               </li>
             ))}
           </ul>
-          <button
+          <Button
             onClick={submit}
             disabled={busy}
             className="brand-gradient w-full rounded-xl py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60"
           >
             {busy ? "Creating…" : `Create group (${selected.length} members)`}
-          </button>
+          </Button>
         </div>
       ) : null}
 
-      {isLoading ? (
+      {groupError ? <p role="alert" className="mt-6 text-sm text-destructive">Groups could not be loaded. Please refresh.</p> : isLoading ? (
         <p className="mt-6 text-sm text-muted-foreground">Loading groups…</p>
       ) : (groups ?? []).length === 0 ? (
-        <div className="mt-10 rounded-2xl border border-dashed border-border p-8 text-center">
-          <p className="text-sm font-semibold">No groups yet</p>
+        <div className="mt-10 border-y border-border py-10 text-center">
+          <Users aria-hidden className="mx-auto mb-3 size-8 text-primary" /><p className="text-sm font-semibold">No groups yet</p>
           <p className="mt-1 text-xs text-muted-foreground">Create a group to start a conversation.</p>
         </div>
       ) : (
@@ -135,7 +138,7 @@ function GroupsPage() {
               <Link
                 to="/c/$chatId"
                 params={{ chatId: g.id }}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-soft"
+                className="flex items-center gap-3 rounded-lg border border-border bg-card p-4 shadow-soft hover:border-primary/40"
               >
                 <ProfileAvatar name={g.title} className="size-11 bg-secondary text-secondary-foreground" />
                 <span className="min-w-0 flex-1">

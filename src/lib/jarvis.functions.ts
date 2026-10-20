@@ -211,43 +211,29 @@ export const jarvisGroupAction = createServerFn({ method: "POST" })
           : "manage_group_members",
     );
 
+    const { data: group, error: groupError } = await supabaseAdmin.from("chats").select("is_group, created_by, name").eq("id", data.groupId).maybeSingle();
+    if (groupError || !group?.is_group) throw new Error("Group not found.");
+    const { assertOutranksLogged, logActivity } = await import("./powers.server");
+    let operation;
     if (data.action === "delete") {
-      await supabaseAdmin.from("chats").delete().eq("id", data.groupId);
-      return { ok: true as const };
-    }
-    if (data.action === "update") {
-      await supabaseAdmin
-        .from("chats")
-        .update({
-          ...(data.name ? { name: data.name } : {}),
-          ...(data.description !== undefined ? { description: data.description } : {}),
-          ...(data.onlyAdminsSend !== undefined ? { only_admins_send: data.onlyAdminsSend } : {}),
-        })
-        .eq("id", data.groupId);
-      return { ok: true as const };
-    }
-    if (!data.userId) throw new Error("A member is required for this action");
-    {
-      const { assertOutranksLogged } = await import("./powers.server");
-      await assertOutranksLogged(context.userId, data.userId, `jarvis.group.${data.action}`);
-    }
-    if (data.action === "add_member") {
-      await supabaseAdmin
-        .from("chat_members")
-        .upsert({ chat_id: data.groupId, user_id: data.userId }, { onConflict: "chat_id,user_id" });
-    } else if (data.action === "remove_member") {
-      await supabaseAdmin
-        .from("chat_members")
-        .delete()
-        .eq("chat_id", data.groupId)
-        .eq("user_id", data.userId);
+      operation = await supabaseAdmin.from("chats").delete().eq("id", data.groupId);
+    } else if (data.action === "update") {
+      operation = await supabaseAdmin.from("chats").update({
+        ...(data.name ? { name: data.name } : {}),
+        ...(data.description !== undefined ? { description: data.description } : {}),
+        ...(data.onlyAdminsSend !== undefined ? { only_admins_send: data.onlyAdminsSend } : {}),
+      }).eq("id", data.groupId);
     } else {
-      await supabaseAdmin
-        .from("chat_members")
-        .update({ is_admin: data.action === "promote" })
-        .eq("chat_id", data.groupId)
-        .eq("user_id", data.userId);
+      if (!data.userId) throw new Error("A member is required for this action");
+      const { assertGroupOwnerProtected } = await import("./access-rules");
+      assertGroupOwnerProtected(group.created_by, data.userId, data.action);
+      await assertOutranksLogged(context.userId, data.userId, `jarvis.group.${data.action}`);
+      if (data.action === "add_member") operation = await supabaseAdmin.from("chat_members").upsert({ chat_id: data.groupId, user_id: data.userId }, { onConflict: "chat_id,user_id" });
+      else if (data.action === "remove_member") operation = await supabaseAdmin.from("chat_members").delete().eq("chat_id", data.groupId).eq("user_id", data.userId);
+      else operation = await supabaseAdmin.from("chat_members").update({ is_admin: data.action === "promote" }).eq("chat_id", data.groupId).eq("user_id", data.userId);
     }
+    if (operation.error) throw new Error(operation.error.message);
+    await logActivity({ actorId: context.userId, action: `jarvis.group.${data.action}`, targetType: "group", targetId: data.groupId, targetLabel: group.name });
     return { ok: true as const };
   });
 
@@ -439,10 +425,13 @@ export const jarvisUpdateReport = createServerFn({ method: "POST" })
     const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(context.userId, "resolve_reports");
-    await supabaseAdmin
+    const { error } = await supabaseAdmin
       .from("reports")
       .update({ status: data.status, action_note: data.note ?? null })
       .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    const { logActivity } = await import("./powers.server");
+    await logActivity({ actorId: context.userId, action: `jarvis.report.${data.status}`, targetType: "report", targetId: data.id, detail: data.note });
     return { ok: true as const };
   });
 
