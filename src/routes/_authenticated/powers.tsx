@@ -39,6 +39,8 @@ import {
 export const Route = createFileRoute("/_authenticated/powers")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Staff Powers — BharatChat" },
       { name: "description", content: "Operational staff actions available for your BharatChat rank." },
       { property: "og:title", content: "Staff Powers — BharatChat" },

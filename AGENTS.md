@@ -13,3 +13,4 @@
 - Group creation uses an authenticated atomic database function; membership and message identity/owner/send restrictions are enforced by database triggers so browser writes cannot bypass them.
 - JARVIS summaries use member-scoped reads and server-only AI SDK Responses helpers, never privileged transcript reads; summaries are on-demand results without AI chat-history storage.
 - Shared presentation uses global semantic tokens and the existing design components to keep messaging, staff tools and owner administration cohesive.
+- Mount the CSS-only launch intro once at the root, persisting its seen marker in browser storage after hydration; this prevents navigation replays without affecting auth or adding Android video/GPU dependencies.

@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/register")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Create your BharatChat account" },
       {
         name: "description",

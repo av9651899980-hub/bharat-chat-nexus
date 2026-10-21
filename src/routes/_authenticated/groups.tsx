@@ -12,6 +12,8 @@ import { ProfileAvatar } from "@/components/profile-avatar";
 export const Route = createFileRoute("/_authenticated/groups")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Groups — BharatChat" },
       { name: "description", content: "Create and manage your BharatChat groups and group members." },
       { property: "og:title", content: "Groups — BharatChat" },

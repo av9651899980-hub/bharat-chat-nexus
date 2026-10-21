@@ -10,6 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
+import { LaunchIntro } from "@/components/launch-intro";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -79,15 +80,27 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "BharatChat — Simple, fast, secure messaging" },
-      { name: "description", content: "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages." },
+      {
+        name: "description",
+        content:
+          "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages.",
+      },
       { name: "author", content: "Lovable" },
       { property: "og:title", content: "BharatChat — Simple, fast, secure messaging" },
-      { property: "og:description", content: "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages." },
+      {
+        property: "og:description",
+        content:
+          "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
       { name: "twitter:title", content: "BharatChat — Simple, fast, secure messaging" },
-      { name: "twitter:description", content: "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages." },
+      {
+        name: "twitter:description",
+        content:
+          "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages.",
+      },
     ],
     links: [
       {
@@ -95,7 +108,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap",
+      },
     ],
   }),
   shellComponent: RootShell,
@@ -125,6 +141,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
+      <LaunchIntro />
       <Toaster richColors theme="dark" />
     </QueryClientProvider>
   );

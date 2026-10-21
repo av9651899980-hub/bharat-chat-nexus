@@ -431,7 +431,7 @@ export const jarvisUpdateReport = createServerFn({ method: "POST" })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     const { logActivity } = await import("./powers.server");
-    await logActivity({ actorId: context.userId, action: `jarvis.report.${data.status}`, targetType: "report", targetId: data.id, detail: data.note });
+    await logActivity({ actorId: context.userId, action: `jarvis.report.${data.status}`, targetType: "report", targetId: data.id, detail: data.note ?? null });
     return { ok: true as const };
   });
 

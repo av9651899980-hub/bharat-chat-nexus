@@ -7,12 +7,16 @@ import { useAccount } from "@/hooks/useAccount";
 import { loadChats } from "@/lib/chat-client";
 import { supabase } from "@/integrations/supabase/client";
 import { ProfileAvatar } from "@/components/profile-avatar";
+import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/_authenticated/chats")({
   head: () => ({
     meta: [
       { title: "Chats — BharatChat" },
-      { name: "description", content: "Your recent BharatChat conversations, groups and announcements." },
+      {
+        name: "description",
+        content: "Your recent BharatChat conversations, groups and announcements.",
+      },
       { property: "og:title", content: "Chats — BharatChat" },
       { property: "og:description", content: "Your recent BharatChat conversations." },
     ],
@@ -28,7 +32,7 @@ function ChatsPage() {
     queryKey: ["chats", userId],
     enabled: !!userId,
     refetchInterval: 10000,
-    queryFn: () => loadChats(userId!, false),
+    queryFn: () => loadChats(userId ?? "", false),
   });
 
   const { data: announcement } = useQuery({
@@ -50,19 +54,33 @@ function ChatsPage() {
 
   return (
     <AppShell>
+      <div className="mb-5 flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Conversations</h1>
+        <Button
+          asChild
+          variant="outline"
+          size="icon"
+          className="size-11 border-border bg-card text-primary"
+        >
+          <Link to="/new" aria-label="Start a conversation" title="Start a conversation">
+            <Plus className="size-5" />
+          </Link>
+        </Button>
+      </div>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
         <input
           value={term}
           onChange={(e) => setTerm(e.target.value)}
           placeholder="Search chats"
-          className="w-full rounded-2xl border border-input bg-card py-3 pl-10 pr-4 text-sm outline-none focus:border-ring"
+          aria-label="Search chats"
+          className="w-full rounded-lg border border-input bg-card py-3.5 pl-10 pr-4 text-sm shadow-soft outline-none focus:border-ring"
         />
       </div>
 
       {announcement ? (
-        <div className="mt-4 rounded-2xl border border-accent/40 bg-accent/10 p-4">
-          <p className="flex items-center gap-2 text-xs font-bold tracking-wide text-accent-foreground">
+        <div className="mt-4 border-l-2 border-accent bg-accent/5 p-4">
+          <p className="flex items-center gap-2 text-xs font-bold tracking-wide text-accent">
             <Megaphone className="size-4" /> 👑 JARVIS 👑
           </p>
           <p className="mt-1 text-sm font-semibold">{announcement.title}</p>
@@ -77,17 +95,14 @@ function ChatsPage() {
       {isLoading ? (
         <p className="mt-6 text-sm text-muted-foreground">Loading conversations…</p>
       ) : filtered.length === 0 ? (
-        <div className="mt-10 rounded-2xl border border-dashed border-border p-8 text-center">
+        <div className="mt-8 border-y border-border py-10 text-center">
           <p className="text-sm font-semibold">No conversations yet</p>
           <p className="mt-1 text-xs text-muted-foreground">
             Start a chat by searching for someone&apos;s username.
           </p>
-          <Link
-            to="/new"
-            className="brand-gradient mt-4 inline-block rounded-xl px-4 py-2 text-xs font-semibold text-primary-foreground"
-          >
-            Start a chat
-          </Link>
+          <Button asChild className="mt-4">
+            <Link to="/new">Start a chat</Link>
+          </Button>
         </div>
       ) : (
         <ul className="mt-3 space-y-2">
@@ -96,12 +111,14 @@ function ChatsPage() {
               <Link
                 to="/c/$chatId"
                 params={{ chatId: chat.id }}
-                className="flex items-center gap-3 rounded-2xl border border-border bg-card p-3 shadow-soft"
+                className="flex min-h-20 items-center gap-3.5 rounded-lg border border-border/70 bg-card p-4 shadow-soft transition-colors hover:border-accent/40 hover:bg-secondary/60"
               >
                 <ProfileAvatar src={chat.avatarUrl} name={chat.title} />
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-semibold">{chat.title}</span>
-                  <span className="block truncate text-xs text-muted-foreground">{chat.subtitle}</span>
+                  <span className="block truncate text-base font-semibold">{chat.title}</span>
+                  <span className="mt-1 block truncate text-sm text-muted-foreground">
+                    {chat.subtitle}
+                  </span>
                 </span>
               </Link>
             </li>
