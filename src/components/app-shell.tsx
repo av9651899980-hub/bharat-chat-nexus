@@ -11,7 +11,7 @@ function JarvisMark() {
     <Link
       to="/omnivers"
       aria-label="JARVIS"
-      className="rounded-full border border-jarvis/60 bg-jarvis/10 px-3 py-1 text-[11px] font-semibold tracking-[0.2em] text-jarvis shadow-jarvis hover:bg-jarvis/20"
+      className="rounded-md border border-accent/35 bg-accent/10 px-2.5 py-2 text-[11px] font-semibold text-accent hover:bg-accent/20"
     >
       JARVIS
     </Link>
@@ -53,17 +53,16 @@ export function AppShell({
   });
 
   return (
-    <div className="relative flex min-h-screen flex-col bg-background">
-      <div aria-hidden className="surface-glow pointer-events-none fixed inset-x-0 top-0 h-64" />
-      <header className="sticky top-0 z-20 border-b border-border/60 bg-card/90 backdrop-blur-xl backdrop-saturate-150">
-        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3">
+    <div className="app-shell relative flex min-h-dvh flex-col bg-background">
+      <header className="sticky top-0 z-20 border-b border-border/70 bg-card/95 shadow-soft backdrop-blur-md">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-2 px-4 py-3 sm:px-6">
           <Button variant="ghost"
             onClick={() => navigate({ to: "/chats" })}
-            className="text-lg font-bold text-foreground"
+            className="h-11 min-w-0 justify-start px-0 text-lg font-bold text-foreground hover:bg-transparent hover:text-primary"
           >
-            <span className="flex items-center gap-2"><span aria-hidden className="flex size-8 items-center justify-center rounded-lg border border-primary/30 bg-primary/10 text-sm font-extrabold">B</span>{title}</span>
+            <span className="truncate">{title === "BharatChat" ? <>Bharat<span className="text-primary">Chat</span></> : title}</span>
           </Button>
-          <div className="flex items-center gap-3">
+          <div className="flex shrink-0 items-center gap-2">
             {data?.isJarvis ? <JarvisMark /> : null}
             <Link to="/notifications" aria-label="Notifications" className="relative flex size-11 items-center justify-center rounded-lg hover:bg-secondary">
               <Bell className="size-5 text-foreground" />
@@ -77,10 +76,10 @@ export function AppShell({
         </div>
       </header>
 
-      <main className="relative mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-4">{children}</main>
+      <main className="relative mx-auto w-full max-w-3xl flex-1 px-4 pb-28 pt-6 sm:px-6">{children}</main>
 
       {showNav ? (
-        <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border/60 bg-card/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl backdrop-saturate-150">
+        <nav aria-label="Main navigation" className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
           <div
             className={`mx-auto grid w-full max-w-3xl ${isStaff ? "grid-cols-4" : "grid-cols-3"}`}
           >
@@ -88,9 +87,9 @@ export function AppShell({
               <Link
                 key={item.to}
                 to={item.to}
-                activeProps={{ className: "text-primary" }}
+                activeProps={{ className: "text-primary bg-primary/5 border-t-primary" }}
                 inactiveProps={{ className: "text-muted-foreground" }}
-                className="flex flex-col items-center gap-1 py-3 text-xs font-medium hover:bg-secondary"
+                className="flex min-h-16 flex-col items-center justify-center gap-1.5 border-t-2 border-t-transparent py-3 text-xs font-semibold hover:bg-secondary"
               >
                 <item.icon className="size-5" />
                 {item.label}
