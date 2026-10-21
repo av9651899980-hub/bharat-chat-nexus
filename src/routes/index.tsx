@@ -20,7 +20,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "BharatChat — Simple, fast, secure messaging" },
       {
         property: "og:description",
-        content: "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages.",
+        content:
+          "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages.",
       },
     ],
   }),
@@ -94,7 +95,9 @@ function PermissionSetup({ onDone }: { onDone: () => void }) {
   return (
     <div className="flex min-h-screen flex-col justify-between bg-background px-6 py-12">
       <div className="mx-auto w-full max-w-md">
-        <p className="mb-8 text-2xl font-extrabold">Bharat<span className="text-primary">Chat</span></p>
+        <p className="mb-8 text-2xl font-extrabold">
+          Bharat<span className="text-primary">Chat</span>
+        </p>
         <h1 className="text-2xl font-bold tracking-tight">Set up BharatChat</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           BharatChat needs a few permissions before you sign in. You can change these later in your
@@ -103,9 +106,24 @@ function PermissionSetup({ onDone }: { onDone: () => void }) {
 
         <ul className="mt-8 space-y-3">
           {[
-            { icon: Bell, title: "Notifications", body: "So you never miss a new message.", key: "notifications" },
-            { icon: Mic, title: "Microphone", body: "Required to record voice messages.", key: "microphone" },
-            { icon: Camera, title: "Camera", body: "Requested only when camera features are enabled.", key: "camera" },
+            {
+              icon: Bell,
+              title: "Notifications",
+              body: "So you never miss a new message.",
+              key: "notifications",
+            },
+            {
+              icon: Mic,
+              title: "Microphone",
+              body: "Required to record voice messages.",
+              key: "microphone",
+            },
+            {
+              icon: Camera,
+              title: "Camera",
+              body: "Requested only when camera features are enabled.",
+              key: "camera",
+            },
           ].map((item) => (
             <li
               key={item.title}
@@ -174,8 +192,12 @@ function LoginScreen() {
   return (
     <div className="flex min-h-screen flex-col justify-between bg-background px-6 py-12">
       <div className="mx-auto w-full max-w-md">
-        <h1 className="text-3xl font-extrabold">Bharat<span className="text-primary">Chat</span></h1>
-        <p className="mt-1 text-sm text-muted-foreground">Sign in to continue your conversations.</p>
+        <h1 className="text-3xl font-extrabold">
+          Bharat<span className="text-primary">Chat</span>
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Sign in to continue your conversations.
+        </p>
 
         <form onSubmit={submit} className="mt-8 space-y-4">
           <div>

@@ -13,7 +13,10 @@ export const Route = createFileRoute("/_authenticated/chats")({
   head: () => ({
     meta: [
       { title: "Chats — BharatChat" },
-      { name: "description", content: "Your recent BharatChat conversations, groups and announcements." },
+      {
+        name: "description",
+        content: "Your recent BharatChat conversations, groups and announcements.",
+      },
       { property: "og:title", content: "Chats — BharatChat" },
       { property: "og:description", content: "Your recent BharatChat conversations." },
     ],
@@ -53,8 +56,15 @@ function ChatsPage() {
     <AppShell>
       <div className="mb-5 flex items-center justify-between">
         <h1 className="text-2xl font-bold">Conversations</h1>
-        <Button asChild variant="outline" size="icon" className="size-11 border-border bg-card text-primary">
-          <Link to="/new" aria-label="Start a conversation" title="Start a conversation"><Plus className="size-5" /></Link>
+        <Button
+          asChild
+          variant="outline"
+          size="icon"
+          className="size-11 border-border bg-card text-primary"
+        >
+          <Link to="/new" aria-label="Start a conversation" title="Start a conversation">
+            <Plus className="size-5" />
+          </Link>
         </Button>
       </div>
       <div className="relative">
@@ -91,11 +101,7 @@ function ChatsPage() {
             Start a chat by searching for someone&apos;s username.
           </p>
           <Button asChild className="mt-4">
-          <Link
-            to="/new"
-          >
-            Start a chat
-          </Link>
+            <Link to="/new">Start a chat</Link>
           </Button>
         </div>
       ) : (
@@ -110,7 +116,9 @@ function ChatsPage() {
                 <ProfileAvatar src={chat.avatarUrl} name={chat.title} />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-base font-semibold">{chat.title}</span>
-                  <span className="mt-1 block truncate text-sm text-muted-foreground">{chat.subtitle}</span>
+                  <span className="mt-1 block truncate text-sm text-muted-foreground">
+                    {chat.subtitle}
+                  </span>
                 </span>
               </Link>
             </li>

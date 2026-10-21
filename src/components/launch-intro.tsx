@@ -20,7 +20,9 @@ export function LaunchIntro() {
 
     setVisible(true);
     const timer = window.setTimeout(() => setVisible(false), INTRO_DURATION_MS);
-    const onPreferenceChange = () => { if (preference.matches) setVisible(false); };
+    const onPreferenceChange = () => {
+      if (preference.matches) setVisible(false);
+    };
     preference.addEventListener("change", onPreferenceChange);
     return () => {
       window.clearTimeout(timer);
@@ -44,14 +46,19 @@ export function LaunchIntro() {
     const previousFocus = document.activeElement;
     const scene = document.querySelector<HTMLElement>(".launch-intro");
     const siblings = Array.from(scene?.parentElement?.children ?? []).filter(
-      (element): element is HTMLElement => element instanceof HTMLElement && element !== scene && element.tagName !== "SCRIPT",
+      (element): element is HTMLElement =>
+        element instanceof HTMLElement && element !== scene && element.tagName !== "SCRIPT",
     );
     const inertStates = siblings.map((element) => element.inert);
-    siblings.forEach((element) => { element.inert = true; });
+    siblings.forEach((element) => {
+      element.inert = true;
+    });
     document.body.style.overflow = "hidden";
     return () => {
       document.body.style.overflow = previousOverflow;
-      siblings.forEach((element, index) => { element.inert = inertStates[index] ?? false; });
+      siblings.forEach((element, index) => {
+        element.inert = inertStates[index] ?? false;
+      });
       if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
     };
   }, [visible]);
@@ -59,7 +66,13 @@ export function LaunchIntro() {
   if (!visible) return null;
 
   return (
-    <div className="launch-intro" role="dialog" aria-modal="true" aria-label="BharatChat opening" data-testid="launch-intro">
+    <div
+      className="launch-intro"
+      role="dialog"
+      aria-modal="true"
+      aria-label="BharatChat opening"
+      data-testid="launch-intro"
+    >
       <div className="intro-stage" aria-hidden="true">
         <div className="intro-core" />
         <div className="intro-ring" />
@@ -67,8 +80,17 @@ export function LaunchIntro() {
         <div className="intro-ring intro-ring-inner" />
       </div>
       <div className="intro-sweep" aria-hidden="true" />
-      <div className="intro-brand"><h1>Bharat<span>Chat</span></h1></div>
-      <Button variant="outline" autoFocus onClick={() => setVisible(false)} className="intro-skip gap-2 border-border/60 bg-secondary/40 text-foreground">
+      <div className="intro-brand">
+        <h1>
+          Bharat<span>Chat</span>
+        </h1>
+      </div>
+      <Button
+        variant="outline"
+        autoFocus
+        onClick={() => setVisible(false)}
+        className="intro-skip gap-2 border-border/60 bg-secondary/40 text-foreground"
+      >
         Skip <ArrowRight aria-hidden="true" className="size-4" />
       </Button>
     </div>
