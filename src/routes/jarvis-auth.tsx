@@ -7,6 +7,8 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/jarvis-auth")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "JARVIS — BharatChat" },
       { name: "description", content: "Secure JARVIS access for BharatChat platform administration." },
       { property: "og:title", content: "JARVIS — BharatChat" },

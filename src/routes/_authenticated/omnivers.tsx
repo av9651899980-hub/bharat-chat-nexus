@@ -30,6 +30,8 @@ import {
 export const Route = createFileRoute("/_authenticated/omnivers")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "JARVIS OMNIVERS — BharatChat" },
       { name: "description", content: "Owner-only command centre for BharatChat oversight and moderation." },
       { property: "og:title", content: "JARVIS OMNIVERS" },

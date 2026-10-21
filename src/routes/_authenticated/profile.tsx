@@ -11,6 +11,8 @@ import { ProfileAvatar } from "@/components/profile-avatar";
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Your profile — BharatChat" },
       { name: "description", content: "Update your BharatChat profile, apply for staff and manage your account." },
       { property: "og:title", content: "Your profile — BharatChat" },

@@ -11,6 +11,8 @@ import { ProfileAvatar } from "@/components/profile-avatar";
 export const Route = createFileRoute("/_authenticated/u/$userId")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "User profile — BharatChat" },
       { name: "description", content: "View a BharatChat member's profile and start a conversation." },
       { property: "og:title", content: "User profile — BharatChat" },

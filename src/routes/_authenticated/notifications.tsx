@@ -8,6 +8,8 @@ import { useAccount } from "@/hooks/useAccount";
 export const Route = createFileRoute("/_authenticated/notifications")({
   head: () => ({
     meta: [
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { title: "Notifications — BharatChat" },
       { name: "description", content: "Messages, staff updates and JARVIS announcements in one place." },
       { property: "og:title", content: "Notifications — BharatChat" },

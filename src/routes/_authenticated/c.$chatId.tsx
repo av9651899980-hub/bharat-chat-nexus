@@ -306,10 +306,10 @@ function ConversationPage() {
         <button onClick={() => navigate({ to: "/chats" })} className="flex items-center gap-1 text-sm text-muted-foreground">
           <ArrowLeft className="size-4" /> Back
         </button>
-        <div className="flex items-center gap-2 text-right">
+        <div className="flex min-w-0 items-center gap-2 px-2 text-right">
           {!isGroup ? <ProfileAvatar src={other?.profile?.avatar_url} name={title} className="size-9" textClassName="text-xs" /> : null}
-          <div>
-            <p className="text-sm font-semibold">
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold">
               {title}
               {!isGroup ? <RoleBadge role={other?.role ?? null} /> : null}
             </p>
@@ -349,7 +349,7 @@ function ConversationPage() {
                 }}
                 role="button"
                 tabIndex={0}
-                className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-left shadow-soft ${
+                className={`min-w-0 max-w-[85%] rounded-lg px-4 py-3 text-left shadow-soft ${
                   mine
                     ? "bg-bubble-out text-bubble-out-foreground"
                     : "border border-border bg-bubble-in text-bubble-in-foreground"
@@ -362,7 +362,7 @@ function ConversationPage() {
                   </span>
                 ) : null}
                 {parent ? (
-                  <span className="mb-1 block truncate rounded-lg border-l-2 border-primary/60 bg-black/5 px-2 py-1 text-[11px] opacity-80">
+                  <span className="mb-1 block truncate rounded-md border-l-2 border-primary/60 bg-background/30 px-2 py-1 text-xs">
                     {parent.deleted_at ? "Message deleted" : (parent.content ?? "Voice message")}
                   </span>
                 ) : null}
@@ -378,7 +378,7 @@ function ConversationPage() {
                     size={m.attachment_size}
                   />
                 ) : (
-                  <span className="whitespace-pre-wrap break-words text-sm">{m.content}</span>
+                  <span className="whitespace-pre-wrap break-words text-base leading-relaxed [overflow-wrap:anywhere]">{m.content}</span>
                 )}
                 <span className="mt-1 flex items-center justify-end gap-1 text-[10px] opacity-70">
                   {m.edited_at ? "edited · " : ""}
@@ -402,7 +402,7 @@ function ConversationPage() {
       </div>
 
       {active ? (
-        <div className="fixed inset-0 z-30 flex items-end bg-black/40" onClick={() => setActive(null)}>
+        <div className="fixed inset-0 z-30 flex items-end bg-scrim" onClick={() => setActive(null)}>
           <div className="w-full rounded-t-3xl bg-card p-4" onClick={(e) => e.stopPropagation()}>
             <div className="mb-3 flex gap-2">
               {["👍", "❤️", "😂", "😮", "🙏"].map((emoji) => (
@@ -437,7 +437,7 @@ function ConversationPage() {
       ) : null}
 
       {forwarding ? (
-        <div className="fixed inset-0 z-30 flex items-end bg-black/40" onClick={() => setForwarding(null)}>
+        <div className="fixed inset-0 z-30 flex items-end bg-scrim" onClick={() => setForwarding(null)}>
           <div className="max-h-[70vh] w-full overflow-y-auto rounded-t-3xl bg-card p-4" onClick={(e) => e.stopPropagation()}>
             <p className="mb-2 text-sm font-semibold">Forward to</p>
             {(myChats ?? []).map((c) => (
@@ -449,8 +449,8 @@ function ConversationPage() {
         </div>
       ) : null}
 
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/95 backdrop-blur">
-        <div className="mx-auto w-full max-w-xl px-4 py-3">
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md">
+        <div className="mx-auto w-full max-w-3xl px-3 py-3 sm:px-6">
           {replyTo || editing ? (
             <div className="mb-2 flex items-center justify-between rounded-xl bg-muted px-3 py-2 text-xs">
               <span className="truncate">
@@ -488,7 +488,8 @@ function ConversationPage() {
                   if (e.key === "Enter") send();
                 }}
                 placeholder="Message"
-                className="flex-1 rounded-full border border-input bg-card px-4 py-3 text-sm outline-none focus:border-ring"
+                aria-label="Message"
+                className="min-w-0 flex-1 rounded-lg border border-input bg-background px-3 py-3 text-base outline-none focus:border-ring"
               />
               <VoiceRecorder
                 chatId={chatId}

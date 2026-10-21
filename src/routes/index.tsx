@@ -4,6 +4,7 @@ import { Bell, Mic, Camera, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { usernameToEmail } from "@/lib/identity";
+import { Button } from "@/components/ui/button";
 
 const PERMISSION_KEY = "bharatchat.permissions.completed";
 
@@ -93,9 +94,7 @@ function PermissionSetup({ onDone }: { onDone: () => void }) {
   return (
     <div className="flex min-h-screen flex-col justify-between bg-background px-6 py-12">
       <div className="mx-auto w-full max-w-md">
-        <div className="brand-gradient mb-8 flex size-14 items-center justify-center rounded-2xl text-2xl font-black text-primary-foreground shadow-soft">
-          B
-        </div>
+        <p className="mb-8 text-2xl font-extrabold">Bharat<span className="text-primary">Chat</span></p>
         <h1 className="text-2xl font-bold tracking-tight">Set up BharatChat</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           BharatChat needs a few permissions before you sign in. You can change these later in your
@@ -130,13 +129,13 @@ function PermissionSetup({ onDone }: { onDone: () => void }) {
       </div>
 
       <div className="mx-auto w-full max-w-md">
-        <button
+        <Button
           onClick={requestAll}
           disabled={busy}
           className="brand-gradient w-full rounded-2xl py-3.5 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-60"
         >
           {busy ? "Requesting…" : "Continue"}
-        </button>
+        </Button>
         <p className="mt-3 flex items-center justify-center gap-1 text-[11px] text-muted-foreground">
           <ShieldCheck className="size-3" /> Permissions are handled by your device.
         </p>
@@ -175,10 +174,7 @@ function LoginScreen() {
   return (
     <div className="flex min-h-screen flex-col justify-between bg-background px-6 py-12">
       <div className="mx-auto w-full max-w-md">
-        <div className="brand-gradient mb-6 flex size-14 items-center justify-center rounded-2xl text-2xl font-black text-primary-foreground shadow-soft">
-          B
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight text-primary">BharatChat</h1>
+        <h1 className="text-3xl font-extrabold">Bharat<span className="text-primary">Chat</span></h1>
         <p className="mt-1 text-sm text-muted-foreground">Sign in to continue your conversations.</p>
 
         <form onSubmit={submit} className="mt-8 space-y-4">
@@ -209,13 +205,13 @@ function LoginScreen() {
 
           {error ? <p className="text-xs font-medium text-destructive">{error}</p> : null}
 
-          <button
+          <Button
             type="submit"
             disabled={busy}
             className="brand-gradient w-full rounded-2xl py-3.5 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-60"
           >
             {busy ? "Signing in…" : "LOGIN"}
-          </button>
+          </Button>
         </form>
 
         <Link to="/register" className="mt-5 block text-center text-sm font-semibold text-primary">

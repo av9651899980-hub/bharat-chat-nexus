@@ -19,15 +19,12 @@ export function LaunchIntro() {
     if (!shouldShowIntro(hasSeen, preference.matches)) return;
 
     setVisible(true);
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     const timer = window.setTimeout(() => setVisible(false), INTRO_DURATION_MS);
     const onPreferenceChange = () => { if (preference.matches) setVisible(false); };
     preference.addEventListener("change", onPreferenceChange);
     return () => {
       window.clearTimeout(timer);
       preference.removeEventListener("change", onPreferenceChange);
-      document.body.style.overflow = previousOverflow;
     };
   }, []);
 
@@ -40,14 +37,22 @@ export function LaunchIntro() {
     return () => window.removeEventListener("keydown", dismissWithEscape);
   }, [visible]);
 
-  // Separate effect restores scrolling immediately on skip or completion.
+  // Keep the underlying app loaded but inaccessible until skip or completion.
   useEffect(() => {
     if (!visible) return;
-    const previousOverflow = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = "hidden";
+    const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement;
+    const scene = document.querySelector<HTMLElement>(".launch-intro");
+    const siblings = Array.from(scene?.parentElement?.children ?? []).filter(
+      (element): element is HTMLElement => element instanceof HTMLElement && element !== scene && element.tagName !== "SCRIPT",
+    );
+    const inertStates = siblings.map((element) => element.inert);
+    siblings.forEach((element) => { element.inert = true; });
+    document.body.style.overflow = "hidden";
     return () => {
-      document.documentElement.style.overflow = previousOverflow;
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
+      siblings.forEach((element, index) => { element.inert = inertStates[index] ?? false; });
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
     };
   }, [visible]);
 
