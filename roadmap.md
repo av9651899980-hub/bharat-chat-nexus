@@ -1,5 +1,6 @@
 - [x] Refine shared visual presentation with readable midnight/graphite, champagne and cyan; preserve all existing functionality.
-- [ ] Update launch intro to nine-second cinematic sequence, no skip, fresh-launch replay only, brief reduced-motion fade; verify real launch transition. Exact reference/emblem matching requires the missing uploaded video/approved logo.
+- [x] Update launch intro to nine-second cinematic wordmark sequence, no skip, fresh-launch replay only, brief reduced-motion fade; verify signed-in launch to Chats, mobile fit and navigation behavior.
+- [ ] Match exact reference/emblem: blocked by missing uploaded reference video and approved tricolor/Ashoka Chakra logo; no substitute emblem invented.
 - [ ] Add owner-only JARVIS group management: list, search/filter, details, member/admin/settings actions, messages, moderation, activity logging.
 - [ ] Add secure owner user details: existing profile, role, groups, reports, moderation history; never expose/store plaintext passwords.
 - [x] Add profile photo upload/change/remove and render photos in existing profile/chat surfaces.
