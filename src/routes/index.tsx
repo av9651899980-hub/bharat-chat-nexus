@@ -18,6 +18,8 @@ export const Route = createFileRoute("/")({
           "BharatChat is a fast, modern messaging app for one-to-one chats, groups and voice messages.",
       },
       { property: "og:title", content: "BharatChat — Simple, fast, secure messaging" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       {
         property: "og:description",
         content:

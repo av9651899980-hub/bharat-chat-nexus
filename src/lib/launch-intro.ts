@@ -1,6 +1,6 @@
-export const INTRO_DURATION_MS = 8000;
-export const INTRO_STORAGE_KEY = "bharatchat.core-awakening.seen";
+export const INTRO_DURATION_MS = 9000;
+export const REDUCED_INTRO_DURATION_MS = 1200;
 
-export function shouldShowIntro(hasSeen: boolean, reducedMotion: boolean) {
-  return !hasSeen && !reducedMotion;
+export function getIntroDuration(reducedMotion: boolean) {
+  return reducedMotion ? REDUCED_INTRO_DURATION_MS : INTRO_DURATION_MS;
 }

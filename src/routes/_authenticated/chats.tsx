@@ -18,6 +18,8 @@ export const Route = createFileRoute("/_authenticated/chats")({
         content: "Your recent BharatChat conversations, groups and announcements.",
       },
       { property: "og:title", content: "Chats — BharatChat" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { property: "og:description", content: "Your recent BharatChat conversations." },
     ],
   }),

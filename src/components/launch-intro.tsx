@@ -1,27 +1,22 @@
 import { useEffect, useState } from "react";
-import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { INTRO_DURATION_MS, INTRO_STORAGE_KEY, shouldShowIntro } from "@/lib/launch-intro";
+import { getIntroDuration } from "@/lib/launch-intro";
 
 export function LaunchIntro() {
   const [visible, setVisible] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    let hasSeen = false;
-    try {
-      hasSeen = window.localStorage.getItem(INTRO_STORAGE_KEY) === "yes";
-      // Mark at launch, including skips, so reloads and navigation never replay.
-      window.localStorage.setItem(INTRO_STORAGE_KEY, "yes");
-    } catch {
-      // Storage may be disabled; the root-mounted scene still only plays once per app session.
-    }
-    if (!shouldShowIntro(hasSeen, preference.matches)) return;
-
+    // The root survives navigation; a fresh document launch gets a fresh scene.
+    setReducedMotion(preference.matches);
     setVisible(true);
-    const timer = window.setTimeout(() => setVisible(false), INTRO_DURATION_MS);
+    let timer = window.setTimeout(() => setVisible(false), getIntroDuration(preference.matches));
     const onPreferenceChange = () => {
-      if (preference.matches) setVisible(false);
+      setReducedMotion(preference.matches);
+      if (preference.matches) {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => setVisible(false), getIntroDuration(true));
+      }
     };
     preference.addEventListener("change", onPreferenceChange);
     return () => {
@@ -30,16 +25,7 @@ export function LaunchIntro() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!visible) return;
-    const dismissWithEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setVisible(false);
-    };
-    window.addEventListener("keydown", dismissWithEscape);
-    return () => window.removeEventListener("keydown", dismissWithEscape);
-  }, [visible]);
-
-  // Keep the underlying app loaded but inaccessible until skip or completion.
+  // Auth and the real app load underneath; restore access after completion.
   useEffect(() => {
     if (!visible) return;
     const previousOverflow = document.body.style.overflow;
@@ -54,6 +40,7 @@ export function LaunchIntro() {
       element.inert = true;
     });
     document.body.style.overflow = "hidden";
+    scene?.focus({ preventScroll: true });
     return () => {
       document.body.style.overflow = previousOverflow;
       siblings.forEach((element, index) => {
@@ -72,27 +59,23 @@ export function LaunchIntro() {
       aria-modal="true"
       aria-label="BharatChat opening"
       data-testid="launch-intro"
+      data-motion={reducedMotion ? "reduced" : "full"}
+      tabIndex={-1}
     >
-      <div className="intro-stage" aria-hidden="true">
-        <div className="intro-core" />
-        <div className="intro-ring" />
-        <div className="intro-ring intro-ring-middle" />
-        <div className="intro-ring intro-ring-inner" />
+      <div className="intro-particles" aria-hidden="true">
+        {Array.from({ length: 12 }, (_, index) => (
+          <i key={index} />
+        ))}
       </div>
-      <div className="intro-sweep" aria-hidden="true" />
       <div className="intro-brand">
-        <h1>
-          Bharat<span>Chat</span>
-        </h1>
+        <div className="intro-wordmark-stage">
+          <h1>
+            Bharat<span>Chat</span>
+          </h1>
+          <div className="intro-sweep" aria-hidden="true" />
+        </div>
+        <p className="intro-tagline">INDIA’S TRUSTED PLATFORM</p>
       </div>
-      <Button
-        variant="outline"
-        autoFocus
-        onClick={() => setVisible(false)}
-        className="intro-skip gap-2 border-border/60 bg-secondary/40 text-foreground"
-      >
-        Skip <ArrowRight aria-hidden="true" className="size-4" />
-      </Button>
     </div>
   );
 }
