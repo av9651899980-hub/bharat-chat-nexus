@@ -63,11 +63,15 @@ export function LaunchIntro() {
       tabIndex={-1}
     >
       <div className="intro-particles" aria-hidden="true">
-        {Array.from({ length: 12 }, (_, index) => <i key={index} />)}
+        {Array.from({ length: 12 }, (_, index) => (
+          <i key={index} />
+        ))}
       </div>
       <div className="intro-brand">
         <div className="intro-wordmark-stage">
-          <h1>Bharat<span>Chat</span></h1>
+          <h1>
+            Bharat<span>Chat</span>
+          </h1>
           <div className="intro-sweep" aria-hidden="true" />
         </div>
         <p className="intro-tagline">INDIA’S TRUSTED PLATFORM</p>
