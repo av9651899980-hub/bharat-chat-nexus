@@ -1,5 +1,5 @@
 - [x] Refine shared visual presentation with readable midnight/graphite, champagne and cyan; preserve all existing functionality.
-- [x] Add and verify the lightweight eight-second first-launch AI Core Awakening intro, skip, reduced motion and no navigation replay.
+- [ ] Update launch intro to nine-second cinematic sequence, no skip, fresh-launch replay only, brief reduced-motion fade; verify real launch transition. Exact reference/emblem matching requires the missing uploaded video/approved logo.
 - [ ] Add owner-only JARVIS group management: list, search/filter, details, member/admin/settings actions, messages, moderation, activity logging.
 - [ ] Add secure owner user details: existing profile, role, groups, reports, moderation history; never expose/store plaintext passwords.
 - [x] Add profile photo upload/change/remove and render photos in existing profile/chat surfaces.
