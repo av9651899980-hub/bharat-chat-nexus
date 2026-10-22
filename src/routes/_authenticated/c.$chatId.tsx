@@ -19,6 +19,8 @@ export const Route = createFileRoute("/_authenticated/c/$chatId")({
       { title: "Conversation — BharatChat" },
       { name: "description", content: "Send messages, replies, reactions and voice notes on BharatChat." },
       { property: "og:title", content: "Conversation — BharatChat" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { property: "og:description", content: "Your BharatChat conversation." },
     ],
   }),
