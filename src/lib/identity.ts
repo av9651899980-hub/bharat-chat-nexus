@@ -9,6 +9,19 @@ export function usernameToEmail(raw: string): string {
   return `${normalizeUsername(raw)}@${EMAIL_DOMAIN}`;
 }
 
+/** True when the input already looks like a real email address. */
+export function isEmailAddress(raw: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw.trim());
+}
+
+/**
+ * Login accepts either a username (mapped to its synthetic auth email)
+ * or a real email address typed directly.
+ */
+export function resolveLoginEmail(raw: string): string {
+  return isEmailAddress(raw) ? raw.trim().toLowerCase() : usernameToEmail(raw);
+}
+
 export type AppRole = "owner" | "manager" | "admin" | "helper" | "viewer";
 
 export const ROLE_RANK: Record<AppRole, number> = {

@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { normalizeUsername, usernameToEmail, JARVIS_EMAIL } from "./identity";
+import { normalizeUsername, JARVIS_EMAIL } from "./identity";
 
 const registerSchema = z.object({
   mobile: z
@@ -15,6 +15,7 @@ const registerSchema = z.object({
     .min(3, "Username must be at least 3 characters")
     .max(24, "Username must be under 24 characters")
     .regex(/^[A-Za-z0-9_.]+$/, "Only letters, numbers, _ and . are allowed"),
+  email: z.string().trim().toLowerCase().email("Enter a valid email address").max(255),
   displayName: z.string().trim().min(2, "Display name is required").max(40),
   password: z.string().min(6, "Password must be at least 6 characters").max(72),
 });
@@ -33,13 +34,19 @@ export const registerUser = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing) throw new Error("That username is already taken");
 
-    const email = usernameToEmail(username);
+    // Real email address: used for sign-in, password reset and notifications.
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-      email,
+      email: data.email,
       password: data.password,
       email_confirm: true,
     });
-    if (error || !created.user) throw new Error("Could not create the account. Try again.");
+    if (error || !created.user) {
+      const message = error?.message ?? "";
+      if (/already|registered|duplicate/i.test(message)) {
+        throw new Error("An account with this email already exists");
+      }
+      throw new Error("Could not create the account. Try again.");
+    }
 
     const { error: profileError } = await supabaseAdmin.from("profiles").insert({
       id: created.user.id,
@@ -52,7 +59,7 @@ export const registerUser = createServerFn({ method: "POST" })
       throw new Error("Could not create the account. Try again.");
     }
 
-    return { email };
+    return { email: data.email };
   });
 
 const jarvisSchema = z.object({
