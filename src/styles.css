@@ -186,7 +186,7 @@
   }
 
   @media (prefers-reduced-motion: reduce) {
-    *,
+    *:not(.launch-intro),
     *::before,
     *::after {
       transition-duration: 0.01ms !important;
