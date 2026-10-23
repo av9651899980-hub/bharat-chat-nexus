@@ -34,13 +34,19 @@ export const registerUser = createServerFn({ method: "POST" })
       .maybeSingle();
     if (existing) throw new Error("That username is already taken");
 
-    const email = usernameToEmail(username);
+    // Real email address: used for sign-in, password reset and notifications.
     const { data: created, error } = await supabaseAdmin.auth.admin.createUser({
-      email,
+      email: data.email,
       password: data.password,
       email_confirm: true,
     });
-    if (error || !created.user) throw new Error("Could not create the account. Try again.");
+    if (error || !created.user) {
+      const message = error?.message ?? "";
+      if (/already|registered|duplicate/i.test(message)) {
+        throw new Error("An account with this email already exists");
+      }
+      throw new Error("Could not create the account. Try again.");
+    }
 
     const { error: profileError } = await supabaseAdmin.from("profiles").insert({
       id: created.user.id,
@@ -53,7 +59,7 @@ export const registerUser = createServerFn({ method: "POST" })
       throw new Error("Could not create the account. Try again.");
     }
 
-    return { email };
+    return { email: data.email };
   });
 
 const jarvisSchema = z.object({
