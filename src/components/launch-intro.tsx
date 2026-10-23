@@ -3,7 +3,13 @@ import { getIntroDuration } from "@/lib/launch-intro";
 
 export function LaunchIntro() {
   const [visible, setVisible] = useState(false);
-  const [reducedMotion, setReducedMotion] = useState(false);
+  // Read the preference up front so the first visible frame already uses the
+  // static reveal; the component only mounts after hydration.
+  const [reducedMotion, setReducedMotion] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+  );
 
   useEffect(() => {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
