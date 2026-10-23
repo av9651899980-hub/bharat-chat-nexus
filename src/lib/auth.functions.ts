@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
-import { normalizeUsername, usernameToEmail, JARVIS_EMAIL } from "./identity";
+import { normalizeUsername, JARVIS_EMAIL } from "./identity";
 
 const registerSchema = z.object({
   mobile: z
