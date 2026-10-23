@@ -6,7 +6,9 @@ export function LaunchIntro() {
   // Read the preference up front so the first visible frame already uses the
   // static reveal; the component only mounts after hydration.
   const [reducedMotion, setReducedMotion] = useState(
-    () => window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    () =>
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   );
 
   useEffect(() => {
