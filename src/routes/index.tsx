@@ -193,7 +193,7 @@ function LoginScreen() {
 
   return (
     <div className="flex min-h-screen flex-col justify-between bg-background px-6 py-12">
-      <div className="mx-auto w-full max-w-md">
+      <div className="mx-auto w-full max-w-md animate-rise">
         <h1 className="text-3xl font-extrabold">
           Bharat<span className="text-primary">Chat</span>
         </h1>
@@ -201,15 +201,16 @@ function LoginScreen() {
           Sign in to continue your conversations.
         </p>
 
-        <form onSubmit={submit} className="mt-8 space-y-4">
+        <form onSubmit={submit} className="mt-8 space-y-4 animate-fade">
           <div>
             <label className="text-xs font-semibold text-muted-foreground" htmlFor="username">
-              Username
+              Username or Email
             </label>
             <input
               id="username"
               value={username}
               autoCapitalize="none"
+              autoComplete="username"
               onChange={(e) => setUsername(e.target.value)}
               className="mt-1 w-full rounded-2xl border border-input bg-card px-4 py-3 text-sm outline-none focus:border-ring"
             />
@@ -222,12 +223,13 @@ function LoginScreen() {
               id="password"
               type="password"
               value={password}
+              autoComplete="current-password"
               onChange={(e) => setPassword(e.target.value)}
               className="mt-1 w-full rounded-2xl border border-input bg-card px-4 py-3 text-sm outline-none focus:border-ring"
             />
           </div>
 
-          {error ? <p className="text-xs font-medium text-destructive">{error}</p> : null}
+          {error ? <p className="text-xs font-medium text-destructive animate-pop">{error}</p> : null}
 
           <Button
             type="submit"
@@ -236,6 +238,13 @@ function LoginScreen() {
           >
             {busy ? "Signing in…" : "LOGIN"}
           </Button>
+
+          <Link
+            to="/forgot-password"
+            className="block text-center text-xs font-semibold text-muted-foreground transition-colors hover:text-primary"
+          >
+            Forgot password?
+          </Link>
         </form>
 
         <Link to="/register" className="mt-5 block text-center text-sm font-semibold text-primary">
