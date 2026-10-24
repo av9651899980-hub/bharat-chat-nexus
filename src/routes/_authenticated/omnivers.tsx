@@ -97,7 +97,7 @@ function OmniversPage() {
   return (
     <JarvisFrame wide>
       <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-lg font-bold tracking-[0.3em] text-jarvis">JARVIS OMNIVERS</h1>
+        <h1 className="text-lg font-bold tracking-[0.3em] text-jarvis animate-rise">JARVIS OMNIVERS</h1>
         <button onClick={() => navigate({ to: "/chats" })} className="text-xs text-jarvis/70 underline">
           Exit
         </button>

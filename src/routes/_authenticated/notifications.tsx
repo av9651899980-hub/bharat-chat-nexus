@@ -50,11 +50,11 @@ function NotificationsPage() {
 
   return (
     <AppShell title="Notifications">
-      <h1 className="mb-3 text-xl font-bold">Notifications</h1>
+      <h1 className="mb-3 text-xl font-bold animate-rise">Notifications</h1>
       {!items?.length ? (
         <p className="text-sm text-muted-foreground">Nothing here yet.</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-2 stagger">
           {items.map((n) => (
             <li key={n.id}>
               <button
