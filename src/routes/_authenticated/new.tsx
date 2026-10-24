@@ -41,7 +41,7 @@ function NewChatPage() {
         <ArrowLeft className="size-4" /> Back
       </button>
 
-      <h1 className="text-lg font-bold">Start a chat</h1>
+      <h1 className="text-lg font-bold animate-rise">Start a chat</h1>
       <input
         value={term}
         onChange={(e) => setTerm(e.target.value)}
@@ -56,7 +56,7 @@ function NewChatPage() {
       ) : (people ?? []).length === 0 ? (
         <p className="mt-6 text-xs text-muted-foreground">No accounts matched that search.</p>
       ) : (
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-4 space-y-2 stagger">
           {(people ?? []).map((p) => (
             <li key={p.id}>
               <button

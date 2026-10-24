@@ -21,7 +21,11 @@ const registerSchema = z.object({
 });
 
 export const registerUser = createServerFn({ method: "POST" })
-  .inputValidator((input: unknown) => registerSchema.parse(input))
+  .inputValidator((input: unknown) => {
+    const parsed = registerSchema.safeParse(input);
+    if (!parsed.success) throw new Error("Please fill every field correctly and try again.");
+    return parsed.data;
+  })
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const username = normalizeUsername(data.username);

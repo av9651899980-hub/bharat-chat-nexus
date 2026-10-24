@@ -57,7 +57,7 @@ function ChatsPage() {
   return (
     <AppShell>
       <div className="mb-5 flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Conversations</h1>
+        <h1 className="text-2xl font-bold animate-rise">Conversations</h1>
         <Button
           asChild
           variant="outline"
@@ -107,7 +107,7 @@ function ChatsPage() {
           </Button>
         </div>
       ) : (
-        <ul className="mt-3 space-y-2">
+        <ul className="mt-3 space-y-2 stagger">
           {filtered.map((chat) => (
             <li key={chat.id}>
               <Link

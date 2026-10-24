@@ -334,7 +334,7 @@ function PowersPage() {
             <h2 className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
               <category.icon className="size-3.5" /> {category.title}
             </h2>
-            <div className="space-y-2">
+            <div className="space-y-2 stagger">
               {category.powers.map((power) => (
                 <div
                   key={power.id}

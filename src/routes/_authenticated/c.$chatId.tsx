@@ -343,7 +343,10 @@ function ConversationPage() {
           const messageReactions = (reactions ?? []).filter((r) => r.message_id === m.id);
           const readByOther = (reads ?? []).some((r) => r.message_id === m.id && r.user_id !== m.sender_id);
           return (
-            <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
+            <div
+              key={m.id}
+              className={`flex msg-in ${mine ? "justify-end" : "justify-start"}`}
+            >
               <div
                 onClick={() => setActive(m)}
                 onKeyDown={(event) => {

@@ -134,7 +134,7 @@ function GroupsPage() {
           <p className="mt-1 text-xs text-muted-foreground">Create a group to start a conversation.</p>
         </div>
       ) : (
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-4 space-y-2 stagger">
           {(groups ?? []).map((g) => (
             <li key={g.id}>
               <Link

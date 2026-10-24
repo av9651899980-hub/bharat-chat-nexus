@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/reset-password")({
@@ -24,10 +24,9 @@ function ResetPasswordPage() {
   const [isRecovery, setIsRecovery] = useState<boolean | null>(null);
 
   // Supabase delivers the recovery session in the URL hash.
-  useState(() => {
-    const hash = typeof window !== "undefined" ? window.location.hash : "";
-    setIsRecovery(hash.includes("type=recovery"));
-  });
+  useEffect(() => {
+    setIsRecovery(window.location.hash.includes("type=recovery"));
+  }, []);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
