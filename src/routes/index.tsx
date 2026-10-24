@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { Bell, Mic, Camera, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { usernameToEmail } from "@/lib/identity";
+import { resolveLoginEmail } from "@/lib/identity";
 import { Button } from "@/components/ui/button";
 
 const PERMISSION_KEY = "bharatchat.permissions.completed";
@@ -175,17 +175,17 @@ function LoginScreen() {
     e.preventDefault();
     setError(null);
     if (!username.trim() || !password) {
-      setError("Enter your username and password.");
+      setError("Enter your username or email and password.");
       return;
     }
     setBusy(true);
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: usernameToEmail(username),
+      email: resolveLoginEmail(username),
       password,
     });
     setBusy(false);
     if (signInError) {
-      setError("Incorrect username or password.");
+      setError("Incorrect username, email or password.");
       return;
     }
     navigate({ to: "/chats", replace: true });
