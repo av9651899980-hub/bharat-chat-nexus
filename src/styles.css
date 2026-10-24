@@ -497,6 +497,89 @@
 .launch-intro[data-motion="reduced"] .intro-sweep {
   display: none;
 }
+/* ============ App-wide micro-animations (reduced-motion safe) ============ */
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pop-in {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes msg-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-rise {
+  animation: rise-in 0.45s var(--ease-smooth, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
+}
+
+@utility animate-fade {
+  animation: fade-in 0.5s ease both;
+}
+
+@utility animate-pop {
+  animation: pop-in 0.3s var(--ease-smooth, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
+}
+
+@utility msg-in {
+  animation: msg-in 0.28s var(--ease-smooth, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
+}
+
+/* Staggered entrance for list children */
+@utility stagger {
+  > * {
+    animation: rise-in 0.4s var(--ease-smooth, cubic-bezier(0.22, 0.61, 0.36, 1)) both;
+  }
+  > *:nth-child(1) { animation-delay: 0.02s; }
+  > *:nth-child(2) { animation-delay: 0.06s; }
+  > *:nth-child(3) { animation-delay: 0.1s; }
+  > *:nth-child(4) { animation-delay: 0.14s; }
+  > *:nth-child(5) { animation-delay: 0.18s; }
+  > *:nth-child(6) { animation-delay: 0.22s; }
+  > *:nth-child(7) { animation-delay: 0.26s; }
+  > *:nth-child(8) { animation-delay: 0.3s; }
+  > *:nth-child(n + 9) { animation-delay: 0.34s; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger > * {
+    animation: none !important;
+  }
+}
+
+@media (min-width: 768px) {
 @media (prefers-reduced-motion: reduce) {
   .launch-intro {
     animation: intro-static-fade 1.2s ease both !important;
