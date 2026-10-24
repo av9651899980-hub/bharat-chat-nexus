@@ -24,7 +24,13 @@ export const Route = createFileRoute("/register")({
 function RegisterPage() {
   const navigate = useNavigate();
   const register = useServerFn(registerUser);
-  const [form, setForm] = useState({ mobile: "", username: "", displayName: "", password: "" });
+  const [form, setForm] = useState({
+    mobile: "",
+    username: "",
+    email: "",
+    displayName: "",
+    password: "",
+  });
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -54,17 +60,20 @@ function RegisterPage() {
   const fields = [
     { key: "mobile" as const, label: "Mobile Number", type: "tel" },
     { key: "username" as const, label: "Username", type: "text" },
+    { key: "email" as const, label: "Email", type: "email" },
     { key: "displayName" as const, label: "Display Name", type: "text" },
     { key: "password" as const, label: "Password", type: "password" },
   ];
 
   return (
     <div className="min-h-screen bg-background px-6 py-12">
-      <div className="mx-auto w-full max-w-md">
+      <div className="mx-auto w-full max-w-md animate-rise">
         <h1 className="text-2xl font-bold tracking-tight text-primary">Create Account</h1>
-        <p className="mt-1 text-sm text-muted-foreground">All fields are required.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          All fields are required. Your email is used for sign-in and password reset.
+        </p>
 
-        <form onSubmit={submit} className="mt-8 space-y-4">
+        <form onSubmit={submit} className="mt-8 space-y-4 stagger">
           {fields.map((field) => (
             <div key={field.key}>
               <label className="text-xs font-semibold text-muted-foreground" htmlFor={field.key}>
