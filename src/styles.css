@@ -579,7 +579,6 @@
   }
 }
 
-@media (min-width: 768px) {
 @media (prefers-reduced-motion: reduce) {
   .launch-intro {
     animation: intro-static-fade 1.2s ease both !important;
