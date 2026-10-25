@@ -23,6 +23,7 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedOmniversRouteImport } from './routes/_authenticated/omnivers'
 import { Route as AuthenticatedPowersRouteImport } from './routes/_authenticated/powers'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AuthenticatedCChatIdRouteImport } from './routes/_authenticated/c.$chatId'
 import { Route as AuthenticatedUUserIdRouteImport } from './routes/_authenticated/u.$userId'
 
@@ -96,6 +97,11 @@ const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   path: '/profile',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedCChatIdRoute = AuthenticatedCChatIdRouteImport.update({
   id: '/c/$chatId',
   path: '/c/$chatId',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/omnivers': typeof AuthenticatedOmniversRoute
   '/powers': typeof AuthenticatedPowersRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/c/$chatId': typeof AuthenticatedCChatIdRoute
   '/u/$userId': typeof AuthenticatedUUserIdRoute
 }
@@ -138,6 +145,7 @@ export interface FileRoutesByTo {
   '/omnivers': typeof AuthenticatedOmniversRoute
   '/powers': typeof AuthenticatedPowersRoute
   '/profile': typeof AuthenticatedProfileRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/c/$chatId': typeof AuthenticatedCChatIdRoute
   '/u/$userId': typeof AuthenticatedUUserIdRoute
 }
@@ -157,6 +165,7 @@ export interface FileRoutesById {
   '/_authenticated/omnivers': typeof AuthenticatedOmniversRoute
   '/_authenticated/powers': typeof AuthenticatedPowersRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/c/$chatId': typeof AuthenticatedCChatIdRoute
   '/_authenticated/u/$userId': typeof AuthenticatedUUserIdRoute
 }
@@ -176,6 +185,7 @@ export interface FileRouteTypes {
     | '/omnivers'
     | '/powers'
     | '/profile'
+    | '/auth/callback'
     | '/c/$chatId'
     | '/u/$userId'
   fileRoutesByTo: FileRoutesByTo
@@ -193,6 +203,7 @@ export interface FileRouteTypes {
     | '/omnivers'
     | '/powers'
     | '/profile'
+    | '/auth/callback'
     | '/c/$chatId'
     | '/u/$userId'
   id:
@@ -211,6 +222,7 @@ export interface FileRouteTypes {
     | '/_authenticated/omnivers'
     | '/_authenticated/powers'
     | '/_authenticated/profile'
+    | '/auth/callback'
     | '/_authenticated/c/$chatId'
     | '/_authenticated/u/$userId'
   fileRoutesById: FileRoutesById
@@ -223,6 +235,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   RegisterRoute: typeof RegisterRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -325,6 +338,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProfileRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/c/$chatId': {
       id: '/_authenticated/c/$chatId'
       path: '/c/$chatId'
@@ -377,6 +397,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   RegisterRoute: RegisterRoute,
   ResetPasswordRoute: ResetPasswordRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

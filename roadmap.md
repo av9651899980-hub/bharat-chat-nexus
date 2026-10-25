@@ -1,3 +1,4 @@
+- [ ] Topic 1 only: Google OAuth, first-time profile setup, existing password login, hidden Google-owner search gateway and legacy JARVIS shutdown.
 - [x] Refine shared visual presentation with readable midnight/graphite, champagne and cyan; preserve all existing functionality.
 - [x] Update launch intro to nine-second cinematic wordmark sequence, no skip, fresh-launch replay only, brief reduced-motion fade; verify signed-in launch to Chats, mobile fit and navigation behavior.
 - [ ] Match exact reference/emblem: blocked by missing uploaded reference video and approved tricolor/Ashoka Chakra logo; no substitute emblem invented.

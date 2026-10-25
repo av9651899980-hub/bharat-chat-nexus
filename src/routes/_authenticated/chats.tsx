@@ -1,5 +1,7 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import { searchOwnerGateway } from "@/lib/owner-gateway.functions";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Search, Megaphone } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -29,6 +31,18 @@ export const Route = createFileRoute("/_authenticated/chats")({
 function ChatsPage() {
   const { userId } = useAccount();
   const [term, setTerm] = useState("");
+  const gateway = useServerFn(searchOwnerGateway);
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!term || term.length > 255) return;
+    let active = true;
+    const timer = setTimeout(() => {
+      void gateway({ data: { term } }).then((result) => {
+        if (active && result.open) void navigate({ to: "/omnivers" });
+      }).catch(() => {}); // Ordinary search behavior never reveals gateway errors.
+    }, 600);
+    return () => { active = false; clearTimeout(timer); };
+  }, [term, gateway, navigate]);
 
   const { data: chats, isLoading } = useQuery({
     queryKey: ["chats", userId],

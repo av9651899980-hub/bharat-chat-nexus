@@ -3,7 +3,10 @@ import { useEffect, useState } from "react";
 import { Bell, Mic, Camera, ShieldCheck, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { resolveLoginEmail } from "@/lib/identity";
+import { isEmailAddress } from "@/lib/identity";
+import { loginWithHandle } from "@/lib/google-account.functions";
+import { useServerFn } from "@tanstack/react-start";
+import { GoogleSignIn } from "@/components/google-sign-in";
 import { Button } from "@/components/ui/button";
 
 const PERMISSION_KEY = "bharatchat.permissions.completed";
@@ -35,8 +38,8 @@ function Landing() {
   const [stage, setStage] = useState<"loading" | "permissions" | "login">("loading");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) {
         navigate({ to: "/chats", replace: true });
         return;
       }
@@ -166,6 +169,7 @@ function PermissionSetup({ onDone }: { onDone: () => void }) {
 
 function LoginScreen() {
   const navigate = useNavigate();
+  const loginHandle = useServerFn(loginWithHandle);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -179,16 +183,18 @@ function LoginScreen() {
       return;
     }
     setBusy(true);
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: resolveLoginEmail(username),
-      password,
-    });
-    setBusy(false);
-    if (signInError) {
-      setError("Incorrect username, email or password.");
-      return;
-    }
-    navigate({ to: "/chats", replace: true });
+    try {
+      if (isEmailAddress(username)) {
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email: username.trim().toLowerCase(), password });
+        if (signInError) throw signInError;
+      } else {
+        const tokens = await loginHandle({ data: { username, password } });
+        const { error: sessionError } = await supabase.auth.setSession(tokens);
+        if (sessionError) throw sessionError;
+      }
+      await navigate({ to: "/chats", replace: true });
+    } catch { setError("Incorrect username, email or password."); }
+    finally { setBusy(false); }
   }
 
   return (
@@ -201,6 +207,7 @@ function LoginScreen() {
           Sign in to continue your conversations.
         </p>
 
+        <div className="mt-6"><GoogleSignIn /></div>
         <form onSubmit={submit} className="mt-8 space-y-4 animate-fade">
           <div>
             <label className="text-xs font-semibold text-muted-foreground" htmlFor="username">
@@ -253,12 +260,6 @@ function LoginScreen() {
       </div>
 
       <div className="mx-auto mt-10 w-full max-w-md text-center">
-        <Link
-          to="/jarvis-auth"
-          className="text-[11px] font-semibold tracking-[0.35em] text-jarvis opacity-80 transition-opacity hover:opacity-100"
-        >
-          JARVIS
-        </Link>
         <div className="mt-4">
           <Link to="/privacy" className="text-[11px] text-muted-foreground underline">
             Privacy Policy & Terms

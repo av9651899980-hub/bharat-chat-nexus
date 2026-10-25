@@ -6,18 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { useAccount } from "@/hooks/useAccount";
 
-function JarvisMark() {
-  return (
-    <Link
-      to="/omnivers"
-      aria-label="JARVIS"
-      className="rounded-md border border-accent/35 bg-accent/10 px-2.5 py-2 text-[11px] font-semibold text-accent hover:bg-accent/20"
-    >
-      JARVIS
-    </Link>
-  );
-}
-
 export function AppShell({
   children,
   title = "BharatChat",
@@ -29,7 +17,7 @@ export function AppShell({
 }) {
   const { userId, data } = useAccount();
   const navigate = useNavigate();
-  const isStaff = (data?.roles?.length ?? 0) > 0;
+  const isStaff = !data?.isJarvis && (data?.roles?.length ?? 0) > 0;
 
   const navItems = [
     { to: "/chats", label: "Chats", icon: MessageCircle },
@@ -72,7 +60,6 @@ export function AppShell({
             </span>
           </Button>
           <div className="flex shrink-0 items-center gap-2">
-            {data?.isJarvis ? <JarvisMark /> : null}
             <Link
               to="/notifications"
               aria-label="Notifications"
