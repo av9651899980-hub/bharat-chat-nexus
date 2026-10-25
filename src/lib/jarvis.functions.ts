@@ -22,6 +22,8 @@ export const verifyGodKey = createServerFn({ method: "POST" })
 export const jarvisOverview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertOwner } = await import("./jarvis.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertOwner(context.userId);
@@ -54,6 +56,8 @@ export const jarvisOverview = createServerFn({ method: "POST" })
 export const jarvisUsers = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertOwner } = await import("./jarvis.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertOwner(context.userId);
@@ -91,6 +95,8 @@ export const jarvisSetUserStatus = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertPermission } = await import("./permissions.server");
     const { assertOutranksLogged, logActivity } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -122,6 +128,8 @@ export const jarvisSetUserStatus = createServerFn({ method: "POST" })
 export const jarvisChats = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(context.userId, "view_chats");
@@ -147,6 +155,8 @@ export const jarvisChatMessages = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ chatId: z.string().uuid() }).parse(input))
   .handler(async ({ data, context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(context.userId, "view_chats");
@@ -162,6 +172,8 @@ export const jarvisChatMessages = createServerFn({ method: "POST" })
 export const jarvisGroups = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(context.userId, "view_chats");
@@ -210,6 +222,8 @@ export const jarvisGroupAction = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(
@@ -250,6 +264,8 @@ export const jarvisGroupAction = createServerFn({ method: "POST" })
 export const jarvisStaff = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertPermission } = await import("./permissions.server");
     const { filterVisibleStaff } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -288,6 +304,8 @@ export const jarvisReviewApplication = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertPermission } = await import("./permissions.server");
     const { assignableRoles, assertOutranksLogged } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -364,6 +382,8 @@ export const jarvisSetRole = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertPermission } = await import("./permissions.server");
     const { assertOutranksLogged, assignableRoles, logActivity } = await import("./powers.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -408,6 +428,8 @@ export const jarvisSetRole = createServerFn({ method: "POST" })
 export const jarvisReports = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(context.userId, "view_reports");
@@ -432,6 +454,8 @@ export const jarvisUpdateReport = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(context.userId, "resolve_reports");
@@ -448,6 +472,8 @@ export const jarvisUpdateReport = createServerFn({ method: "POST" })
 export const jarvisAnnouncements = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(context.userId, "view_staff_panel");
@@ -464,6 +490,8 @@ export const jarvisAnnounce = createServerFn({ method: "POST" })
     z.object({ title: z.string().trim().min(2).max(80), body: z.string().trim().min(2).max(1000) }).parse(input),
   )
   .handler(async ({ data, context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertPermission } = await import("./permissions.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertPermission(context.userId, "send_announcement");
@@ -489,6 +517,8 @@ export const jarvisSetSetting = createServerFn({ method: "POST" })
     z.object({ key: z.string().min(1).max(40), value: z.record(z.string(), z.any()) }).parse(input),
   )
   .handler(async ({ data, context }) => {
+    const { assertGateway } = await import("./owner-gateway.server");
+    await assertGateway(context.userId);
     const { assertOwner } = await import("./jarvis.server");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertOwner(context.userId);
