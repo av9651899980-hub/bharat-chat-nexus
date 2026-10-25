@@ -2,6 +2,8 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 /** Throws unless the caller holds the owner role (the JARVIS authority). */
 export async function assertOwner(userId: string) {
+  const { assertGateway } = await import("./owner-gateway.server");
+  await assertGateway(userId);
   const { data, error } = await supabaseAdmin
     .from("user_roles")
     .select("role")

@@ -6,10 +6,16 @@ export const verifyGodKey = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: unknown) => z.object({ key: z.string().min(1).max(12) }).parse(input))
   .handler(async ({ data, context }) => {
-    const { assertOwner, getJarvisConfig, safeEqual } = await import("./jarvis.server");
-    await assertOwner(context.userId);
-    const { godKey } = getJarvisConfig();
+    const { designatedOwner, grantGateway } = await import("./owner-gateway.server");
+    const { safeEqual } = await import("./jarvis.server");
+    if (!await designatedOwner(context.supabase, context.claims)) throw new Error("Verification failed");
+    const { data: owner, error: ownerError } = await context.supabase.rpc("is_owner", { _user_id: context.userId });
+    if (ownerError || !owner) throw new Error("Verification failed");
+    const godKey = process.env["GOD_KEY"];
+    const sessionId = context.claims.session_id;
+    if (!godKey || typeof sessionId !== "string") throw new Error("Verification failed");
     if (!safeEqual(data.key.trim(), godKey)) throw new Error("Verification failed");
+    await grantGateway(context.userId, sessionId);
     return { ok: true as const };
   });
 
@@ -63,14 +69,18 @@ export const jarvisUsers = createServerFn({ method: "POST" })
       supabaseAdmin.from("staff_applications").select("user_id, status, reason, created_at"),
     ]);
 
-    return (profiles ?? []).map((p) => ({
+    return Promise.all((profiles ?? []).map(async (p) => {
+      const { data: auth } = await supabaseAdmin.auth.admin.getUserById(p.id);
+      return ({
       ...p,
+      email: auth.user?.email ?? null,
+      providers: (auth.user?.identities ?? []).map((identity) => identity.provider),
       roles: (roles ?? []).filter((r) => r.user_id === p.id).map((r) => r.role),
       groups: (members ?? [])
         .filter((m) => m.user_id === p.id && (m.chats as { is_group?: boolean } | null)?.is_group)
         .map((m) => (m.chats as { name?: string } | null)?.name ?? "Group"),
       application: (apps ?? []).find((a) => a.user_id === p.id) ?? null,
-    }));
+    }); }));
   });
 
 export const jarvisSetUserStatus = createServerFn({ method: "POST" })

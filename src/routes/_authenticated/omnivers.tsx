@@ -50,6 +50,7 @@ function OmniversPage() {
   const verify = useServerFn(verifyGodKey);
   const [unlocked, setUnlocked] = useState(false);
   const [key, setKey] = useState("");
+  const [verifying, setVerifying] = useState(false);
   const [tab, setTab] = useState<Tab>("Overview");
 
   if (isLoading) return <JarvisFrame>Initialising…</JarvisFrame>;
@@ -78,17 +79,20 @@ function OmniversPage() {
           className="w-full rounded-xl border border-jarvis/50 bg-black/30 px-4 py-3 text-center text-lg tracking-[0.5em] text-jarvis outline-none"
         />
         <button
+          disabled={verifying || !key}
           onClick={async () => {
+            setVerifying(true);
             try {
               await verify({ data: { key } });
+              setKey("");
               setUnlocked(true);
             } catch {
               toast.error("Verification failed");
-            }
+            } finally { setVerifying(false); }
           }}
           className="mt-3 w-full rounded-xl border border-jarvis/60 bg-jarvis/10 px-4 py-3 text-sm font-semibold tracking-[0.2em] text-jarvis shadow-jarvis"
         >
-          UNLOCK
+          {verifying ? "VERIFYING…" : "UNLOCK"}
         </button>
       </JarvisFrame>
     );
@@ -198,6 +202,9 @@ function UsersTab() {
             {u.mobile ?? "no mobile"} · {u.status} · roles: {u.roles.join(", ") || "none"}
           </p>
           <p className="text-xs text-muted-foreground">Groups: {u.groups.join(", ") || "none"}</p>
+          <p className="break-all text-xs text-muted-foreground">Email: {u.email ?? "unavailable"} · Sign-in: {u.providers.join(", ") || "unavailable"}</p>
+          <p className="break-all text-xs text-muted-foreground">UID: {u.id}</p>
+          <p className="text-xs text-muted-foreground">Joined: {new Date(u.created_at).toLocaleString()} · Last seen: {new Date(u.last_seen).toLocaleString()}</p>
           <div className="mt-2 flex gap-2">
             {(["active", "restricted", "suspended"] as const).map((s) => (
               <button

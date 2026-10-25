@@ -10,6 +10,8 @@
 <!-- LOVABLE:END -->
 
 - Preserve the existing TanStack routes, managed authentication and permission hierarchy; extend existing surfaces rather than duplicating them.
+- Google account completion reuses the profiles table behind a root protected-content boundary; passwords stay exclusively in Auth, and handle login resolves email server-side without returning it.
+- Hidden owner entry requires server-configured verified Google identity and an OAuth session; God Key grants an HTTP-only signed, session-bound short-lived gateway capability checked by Omnivers endpoints, without replacing staff permission checks.
 - Group creation uses an authenticated atomic database function; membership and message identity/owner/send restrictions are enforced by database triggers so browser writes cannot bypass them.
 - JARVIS summaries use member-scoped reads and server-only AI SDK Responses helpers, never privileged transcript reads; summaries are on-demand results without AI chat-history storage.
 - Shared presentation uses global semantic tokens and the existing design components to keep messaging, staff tools and owner administration cohesive.

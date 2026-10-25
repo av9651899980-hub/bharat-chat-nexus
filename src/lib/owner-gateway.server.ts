@@ -34,5 +34,6 @@ export async function assertGateway(userId: string) {
   const { data, error } = await supabaseAdmin.auth.getClaims(header.replace(/^Bearer /, ""));
   if (error || data?.claims.session_id !== parts[1]) throw new Error("Forbidden");
   const { safeEqual } = await import("./jarvis.server");
-  if (!safeEqual(parts[3], await sign(parts.slice(0, 3).join("."))) ) throw new Error("Forbidden");
+  const signature = parts[3];
+  if (!signature || !safeEqual(signature, await sign(parts.slice(0, 3).join(".")))) throw new Error("Forbidden");
 }
