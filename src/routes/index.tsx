@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { isEmailAddress } from "@/lib/identity";
 import { loginWithHandle } from "@/lib/google-account.functions";
 import { useServerFn } from "@tanstack/react-start";
-import { GoogleSignIn } from "@/components/google-sign-in";
+import { ArcEmblem } from "@/components/arc-emblem";
 import { Button } from "@/components/ui/button";
 
 const PERMISSION_KEY = "bharatchat.permissions.completed";
@@ -200,14 +200,7 @@ function LoginScreen() {
   return (
     <div className="flex min-h-screen flex-col justify-between bg-background px-6 py-12">
       <div className="mx-auto w-full max-w-md animate-rise">
-        <h1 className="text-3xl font-extrabold">
-          Bharat<span className="text-primary">Chat</span>
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Sign in to continue your conversations.
-        </p>
-
-        <div className="mt-6"><GoogleSignIn /></div>
+        <ArcEmblem subtitle="Sign in to continue your conversations." />
         <form onSubmit={submit} className="mt-8 space-y-4 animate-fade">
           <div>
             <label className="text-xs font-semibold text-muted-foreground" htmlFor="username">
