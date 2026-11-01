@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { requestPasswordCode } from "@/lib/password-reset.functions";
+import { requestPasswordCode, verifyPasswordCode } from "@/lib/password-reset.functions";
 import { ArcEmblem } from "@/components/arc-emblem";
 
 export const Route = createFileRoute("/forgot-password")({
@@ -34,9 +34,9 @@ function strength(p: string) {
 function ForgotPasswordPage() {
   const navigate = useNavigate();
   const request = useServerFn(requestPasswordCode);
+  const verifyCode = useServerFn(verifyPasswordCode);
   const [step, setStep] = useState<"request" | "code" | "password">("request");
   const [handle, setHandle] = useState("");
-  const [email, setEmail] = useState("");
   const [hint, setHint] = useState("");
   const [code, setCode] = useState("");
   const [pw, setPw] = useState("");
@@ -56,7 +56,7 @@ function ForgotPasswordPage() {
     e?.preventDefault(); setError(null); setBusy(true);
     try {
       const res = await request({ data: { handle, redirectTo: `${window.location.origin}/reset-password` } });
-      setEmail(res.email); setHint(res.hint); setStep("code"); setCooldown(60);
+      setHint(res.hint); setStep("code"); setCooldown(60);
     } catch { setError("Could not send the code. Check your username or email and try again."); }
     finally { setBusy(false); }
   }
@@ -65,9 +65,12 @@ function ForgotPasswordPage() {
     e.preventDefault(); setError(null);
     if (!/^\d{6,8}$/.test(code)) { setError("Enter the code from your email."); return; }
     setBusy(true);
-    const { error: err } = await supabase.auth.verifyOtp({ email, token: code, type: "recovery" });
+    try {
+      const tokens = await verifyCode({ data: { handle, code } });
+      const { error: err } = await supabase.auth.setSession(tokens);
+      if (err) throw err;
+    } catch { setBusy(false); setError("That code is incorrect or expired."); return; }
     setBusy(false);
-    if (err) { setError("That code is incorrect or expired."); return; }
     setStep("password");
   }
 
