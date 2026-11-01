@@ -1,10 +1,10 @@
-import { useEffect, useState, type ReactNode, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type ReactNode, type FormEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRouter } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
 import { completeGoogleProfile } from "@/lib/google-account.functions";
-import { googleProfileSchema } from "@/lib/google-account";
+import { googleProfileSchema, usernameSuggestions } from "@/lib/google-account";
 import { Button } from "@/components/ui/button";
 
 // The protected layout remains integration-owned; this boundary withholds app UI until a real profile exists.
@@ -47,6 +47,20 @@ function ProfileSetup({ userId, name, email, google, onDone }: {
   const [error, setError] = useState<string | null>(null);
   const [passwordSet, setPasswordSet] = useState(false);
   useEffect(() => { setForm((previous) => ({ ...previous, displayName: name })); }, [name]);
+  const suggestions = useMemo(() => usernameSuggestions(name, email), [name, email]);
+  const [availability, setAvailability] = useState<"" | "invalid" | "checking" | "free" | "taken">("");
+  useEffect(() => {
+    const handle = form.username.trim().toLowerCase();
+    if (!handle) { setAvailability(""); return; }
+    if (!googleProfileSchema.shape.username.safeParse(handle).success) { setAvailability("invalid"); return; }
+    setAvailability("checking");
+    let alive = true;
+    const t = setTimeout(async () => {
+      const { data } = await supabase.from("profiles").select("id").eq("username", handle).neq("id", userId).maybeSingle();
+      if (alive) setAvailability(data ? "taken" : "free");
+    }, 400);
+    return () => { alive = false; clearTimeout(t); };
+  }, [form.username, userId]);
   async function submit(event: FormEvent) {
     event.preventDefault(); setError(null);
     const parsed = googleProfileSchema.safeParse(form);
@@ -91,6 +105,19 @@ function ProfileSetup({ userId, name, email, google, onDone }: {
             onChange={(e) => setForm({ ...form, [field.key]: e.target.value })}
             className="mt-1 w-full rounded-2xl border border-input bg-card px-4 py-3 text-sm outline-none focus:border-ring" />
         </div>)}
+      <div>
+        {availability ? <p className={`text-xs ${availability === "taken" ? "text-destructive" : availability === "free" ? "text-primary" : "text-muted-foreground"}`}>
+          {availability === "taken" ? "That username is already taken." : availability === "free" ? "Username is available." : availability === "checking" ? "Checking…" : "3–24 letters, numbers, dots or underscores."}
+        </p> : null}
+        <p className="mt-3 text-xs font-semibold text-muted-foreground">Suggestions</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {suggestions.map((s) => <button type="button" key={s} disabled={busy}
+            onClick={() => setForm((f) => ({ ...f, username: s }))}
+            className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${form.username.toLowerCase() === s ? "border-primary bg-primary/15 text-primary" : "border-border bg-card text-foreground hover:border-primary"}`}>
+            @{s}
+          </button>)}
+        </div>
+      </div>
       {error ? <p role="alert" className="text-xs text-destructive">{error}</p> : null}
       <Button disabled={busy} type="submit" className="h-12 w-full rounded-2xl">{busy ? "Saving…" : "Continue"}</Button>
     </form>
