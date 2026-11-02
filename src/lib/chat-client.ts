@@ -7,18 +7,27 @@ export type ChatSummary = {
   subtitle: string;
   otherUserId: string | null;
   avatarUrl: string | null;
+  memberCount: number;
   updatedAt: string;
 };
 
-export async function loadChats(userId: string, isGroup: boolean): Promise<ChatSummary[]> {
-  const { data: memberships } = await supabase
-    .from("chat_members")
-    .select("chat_id, chats!inner(id, is_group, name, updated_at)")
-    .eq("user_id", userId);
-
-  const rows = (memberships ?? []).filter(
-    (m) => (m.chats as { is_group: boolean } | null)?.is_group === isGroup,
-  );
+// One unified loader: direct chats and groups together on a single screen.
+// Pass isGroup (true/false) to narrow; omit it for every conversation.
+// Conversations the user removed from their own screen (chat_hides) are excluded here,
+// but every record stays intact in the database for JARVIS Omniverse.
+export async function loadChats(userId: string, isGroup?: boolean): Promise<ChatSummary[]> {
+  const [{ data: memberships }, { data: hides }] = await Promise.all([
+    supabase
+      .from("chat_members")
+      .select("chat_id, chats!inner(id, is_group, name, updated_at)")
+      .eq("user_id", userId),
+    supabase.from("chat_hides").select("chat_id").eq("user_id", userId),
+  ]);
+  const hidden = new Set((hides ?? []).map((h) => h.chat_id));
+  const rows = (memberships ?? []).filter((m) => {
+    const group = (m.chats as { is_group: boolean } | null)?.is_group;
+    return !hidden.has(m.chat_id) && (isGroup === undefined || group === isGroup);
+  });
   const chatIds = rows.map((r) => r.chat_id);
   if (!chatIds.length) return [];
 
@@ -38,13 +47,14 @@ export async function loadChats(userId: string, isGroup: boolean): Promise<ChatS
   return rows
     .map((row) => {
       const chat = row.chats as unknown as { id: string; is_group: boolean; name: string | null; updated_at: string };
-      const others = (members ?? []).filter((m) => m.chat_id === chat.id && m.user_id !== userId);
+      const all = (members ?? []).filter((m) => m.chat_id === chat.id);
+      const others = all.filter((m) => m.user_id !== userId);
       const last = (messages ?? []).find((m) => m.chat_id === chat.id);
       const other = others[0]?.profiles as { display_name?: string; avatar_url?: string | null } | null | undefined;
       return {
         id: chat.id,
         isGroup: chat.is_group,
-        title: isGroup ? (chat.name ?? "Group") : (other?.display_name ?? "Unknown"),
+        title: chat.is_group ? (chat.name ?? "Group") : (other?.display_name ?? "Unknown"),
         subtitle: last
           ? last.deleted_at
             ? "Message deleted"
@@ -53,11 +63,29 @@ export async function loadChats(userId: string, isGroup: boolean): Promise<ChatS
               : (last.content ?? "")
           : "No messages yet",
         otherUserId: others[0]?.user_id ?? null,
-        avatarUrl: other?.avatar_url ?? null,
+        avatarUrl: chat.is_group ? null : (other?.avatar_url ?? null),
+        memberCount: all.length,
         updatedAt: last?.created_at ?? chat.updated_at,
       };
     })
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+}
+
+// User-side soft hide: removes the card from the user's own screen only. No data is deleted.
+export async function hideChat(userId: string, chatId: string) {
+  const { error } = await supabase.from("chat_hides").upsert({ user_id: userId, chat_id: chatId });
+  if (error) throw new Error("Could not remove the conversation. Please try again.");
+}
+
+// Re-showing a conversation happens automatically when the user opens it again.
+export async function unhideChat(userId: string, chatId: string) {
+  await supabase.from("chat_hides").delete().eq("user_id", userId).eq("chat_id", chatId);
+}
+
+// Clean member exit from a group; the group record and history stay intact for the owner.
+export async function leaveGroup(chatId: string, userId: string) {
+  const { error } = await supabase.from("chat_members").delete().eq("chat_id", chatId).eq("user_id", userId);
+  if (error) throw new Error("Could not leave the group. Please try again.");
 }
 
 export async function findOrCreateDirectChat(userId: string, otherUserId: string) {
