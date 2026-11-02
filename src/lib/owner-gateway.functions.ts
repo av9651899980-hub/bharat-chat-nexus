@@ -9,7 +9,7 @@ export const searchOwnerGateway = createServerFn({ method: "POST" })
     const { designatedOwner } = await import("./owner-gateway.server");
     const { safeEqual } = await import("./jarvis.server");
     const code = process.env["JARVIS_SEARCH_CODE"];
-    if (!code || !await designatedOwner(context.supabase, context.claims) || !safeEqual(data.term, code)) return { open: false };
+    if (!code || !await designatedOwner(context.supabase) || !safeEqual(data.term, code)) return { open: false };
     // Trusted provisioning only for the verified configured Google identity; no other roles are changed.
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { error } = await supabaseAdmin.from("user_roles").upsert({ user_id: context.userId, role: "owner" }, { onConflict: "user_id,role" });
