@@ -95,6 +95,39 @@ export type Database = {
         }
         Relationships: []
       }
+      chat_hides: {
+        Row: {
+          chat_id: string
+          hidden_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_id: string
+          hidden_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_id?: string
+          hidden_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_hides_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_hides_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chat_members: {
         Row: {
           chat_id: string
