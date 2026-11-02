@@ -3,13 +3,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { isDesignatedGoogleOwner } from "./google-account";
 
 const COOKIE = "bharatchat-owner-gateway";
-export async function designatedOwner(client: SupabaseClient, claims: Record<string, unknown>) {
+// The verified Google identity on the account itself is the proof of ownership.
+// A password sign-in must still pass, so we never require the current session's amr to contain oauth.
+export async function designatedOwner(client: SupabaseClient) {
   const { data, error } = await client.auth.getUser();
-  const methods = Array.isArray(claims["amr"]) ? claims["amr"] : [];
-  const oauth = methods.some((m) => typeof m === "object" && m !== null && "method" in m && m.method === "oauth");
   const googleEmails = (data.user?.identities ?? []).filter((i) => i.provider === "google" &&
     i.identity_data?.["email_verified"] === true).map((i) => String(i.identity_data?.["email"] ?? ""));
-  return !error && isDesignatedGoogleOwner(data.user?.email, googleEmails, oauth, process.env["OWNER_GOOGLE_EMAIL"]);
+  return !error && isDesignatedGoogleOwner(data.user?.email, googleEmails, true, process.env["OWNER_GOOGLE_EMAIL"]);
 }
 async function sign(value: string) {
   const secret = process.env["GOD_KEY"];

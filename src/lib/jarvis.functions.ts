@@ -8,7 +8,7 @@ export const verifyGodKey = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { designatedOwner, grantGateway } = await import("./owner-gateway.server");
     const { safeEqual } = await import("./jarvis.server");
-    if (!await designatedOwner(context.supabase, context.claims)) throw new Error("Verification failed");
+    if (!await designatedOwner(context.supabase)) throw new Error("Verification failed");
     const { data: owner, error: ownerError } = await context.supabase.rpc("is_owner", { _user_id: context.userId });
     if (ownerError || !owner) throw new Error("Verification failed");
     const godKey = process.env["GOD_KEY"];

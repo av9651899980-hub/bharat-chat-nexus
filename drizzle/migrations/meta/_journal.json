@@ -29,6 +29,13 @@
       "when": 1792467949543,
       "tag": "0003_group_membership_and_send_guards",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1793592536289,
+      "tag": "0004_chat_hides_and_unique_username",
+      "breakpoints": true
     }
   ]
 }
