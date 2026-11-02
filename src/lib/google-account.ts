@@ -6,13 +6,21 @@ export const googleProfileSchema = z.object({
   mobile: z.string().trim().min(6).max(20).regex(/^[+0-9 -]+$/),
 });
 
+/** Identity-level owner check. Works for both OAuth and password sign-ins: the verified
+ * Google identity lives on the account itself, so the current session's login method never matters. */
+export function ownerIdentityVerified(
+  email: string | undefined, googleEmails: string[], configuredEmail: string | undefined,
+) {
+  const expected = configuredEmail?.trim().toLowerCase();
+  return Boolean(expected && email?.toLowerCase() === expected &&
+    googleEmails.some((value) => value.toLowerCase() === expected));
+}
+
 export function isDesignatedGoogleOwner(
   email: string | undefined, googleEmails: string[], oauthSession: boolean,
   configuredEmail: string | undefined,
 ) {
-  const expected = configuredEmail?.trim().toLowerCase();
-  return Boolean(expected && oauthSession && email?.toLowerCase() === expected &&
-    googleEmails.some((value) => value.toLowerCase() === expected));
+  return Boolean(oauthSession) && ownerIdentityVerified(email, googleEmails, configuredEmail);
 }
 
 export function needsGoogleProfile(profile: { id: string } | null) {
