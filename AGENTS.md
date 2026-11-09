@@ -16,3 +16,4 @@
 - JARVIS summaries use member-scoped reads and server-only AI SDK Responses helpers, never privileged transcript reads; summaries are on-demand results without AI chat-history storage.
 - Shared presentation uses global semantic tokens and the existing design components to keep messaging, staff tools and owner administration cohesive.
 - Mount the CSS-only launch intro once at the root and start it after hydration using root-lifetime state rather than persistent seen storage; fresh documents replay while route navigation preserves the completed state without affecting auth or adding Android video/GPU dependencies.
+- Keep unified conversation type filtering in a pure helper so direct and group views stay consistent and independently testable.
