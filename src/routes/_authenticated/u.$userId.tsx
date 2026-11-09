@@ -7,6 +7,7 @@ import { AppShell } from "@/components/app-shell";
 import { useAccount } from "@/hooks/useAccount";
 import { findOrCreateDirectChat, loadProfile } from "@/lib/chat-client";
 import { ProfileAvatar } from "@/components/profile-avatar";
+import { PhotoLightbox } from "@/components/photo-lightbox";
 
 export const Route = createFileRoute("/_authenticated/u/$userId")({
   head: () => ({
@@ -27,6 +28,7 @@ function UserPreviewPage() {
   const { userId } = useAccount();
   const navigate = useNavigate();
   const [starting, setStarting] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
 
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ["profile", otherId],
@@ -62,7 +64,9 @@ function UserPreviewPage() {
         <p className="text-sm text-destructive">Unable to open this user. Please try again.</p>
       ) : (
         <div className="rounded-3xl border border-border bg-card p-6 text-center shadow-soft">
-          <ProfileAvatar src={profile.avatar_url} name={profile.display_name} className="mx-auto size-20" textClassName="text-2xl" />
+          <button type="button" aria-label="View profile photo" disabled={!profile.avatar_url} onClick={() => setPhotoOpen(true)} className="mx-auto block rounded-full disabled:cursor-default">
+            <ProfileAvatar src={profile.avatar_url} name={profile.display_name} className="size-20" textClassName="text-2xl" />
+          </button>
           <h1 className="mt-4 text-lg font-bold">{profile.display_name}</h1>
           <p className="text-sm text-muted-foreground">@{profile.username}</p>
           {profile.bio ? <p className="mt-3 text-sm">{profile.bio}</p> : null}
@@ -81,6 +85,7 @@ function UserPreviewPage() {
           </button>
         </div>
       )}
+      {photoOpen && profile?.avatar_url ? <PhotoLightbox src={profile.avatar_url} name={profile.display_name} onClose={() => setPhotoOpen(false)} /> : null}
     </AppShell>
   );
 }

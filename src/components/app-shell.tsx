@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Bell, MessageCircle, Users, User, ShieldCheck } from "lucide-react";
+import { Bell, MessageCircle, User, ShieldCheck } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +21,6 @@ export function AppShell({
 
   const navItems = [
     { to: "/chats", label: "Chats", icon: MessageCircle },
-    { to: "/groups", label: "Groups", icon: Users },
     { to: "/profile", label: "Profile", icon: User },
     ...(isStaff ? [{ to: "/powers", label: "Powers", icon: ShieldCheck }] : []),
   ];
@@ -86,7 +85,7 @@ export function AppShell({
           className="fixed inset-x-0 bottom-0 z-20 border-t border-border/70 bg-card/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md"
         >
           <div
-            className={`mx-auto grid w-full max-w-3xl ${isStaff ? "grid-cols-4" : "grid-cols-3"}`}
+            className={`mx-auto grid w-full max-w-3xl ${isStaff ? "grid-cols-3" : "grid-cols-2"}`}
           >
             {navItems.map((item) => (
               <Link

@@ -7,6 +7,7 @@ import { RoleBadge } from "@/components/role-badge";
 import { supabase } from "@/integrations/supabase/client";
 import { useAccount } from "@/hooks/useAccount";
 import { ProfileAvatar } from "@/components/profile-avatar";
+import { PhotoLightbox } from "@/components/photo-lightbox";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -32,6 +33,7 @@ function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [applying, setApplying] = useState(false);
   const [photoBusy, setPhotoBusy] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const profile = data?.profile as
@@ -175,7 +177,9 @@ function ProfilePage() {
     <AppShell title="Profile">
       <section className="rounded-2xl border border-border bg-card p-4 shadow-soft">
         <div className="flex items-center gap-3">
-          <ProfileAvatar src={profile?.avatar_url} name={profile?.display_name} className="size-16" textClassName="text-2xl" />
+          <button type="button" aria-label="View profile photo" disabled={!profile?.avatar_url} onClick={() => setPhotoOpen(true)} className="shrink-0 rounded-full disabled:cursor-default">
+            <ProfileAvatar src={profile?.avatar_url} name={profile?.display_name} className="size-16" textClassName="text-2xl" />
+          </button>
           <div className="min-w-0">
             <h1 className="text-xl font-bold">
               {profile?.display_name ?? "Your profile"}
@@ -293,6 +297,7 @@ function ProfilePage() {
           Sign out
         </button>
       </div>
+      {photoOpen && profile?.avatar_url ? <PhotoLightbox src={profile.avatar_url} name={profile.display_name ?? "Your"} onClose={() => setPhotoOpen(false)} /> : null}
     </AppShell>
   );
 }
