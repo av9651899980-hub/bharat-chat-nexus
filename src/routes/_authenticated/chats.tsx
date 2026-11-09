@@ -4,6 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { searchOwnerGateway } from "@/lib/owner-gateway.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, Search, Megaphone, Users, MoreHorizontal, MessageCircle } from "lucide-react";
+import { toast } from "sonner";
 import { AppShell } from "@/components/app-shell";
 import { useAccount } from "@/hooks/useAccount";
 import { hideChat, leaveGroup, loadChats, type ChatSummary } from "@/lib/chat-client";
