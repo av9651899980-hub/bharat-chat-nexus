@@ -1,6 +1,7 @@
 import { getCookie, setCookie } from "@tanstack/react-start/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isDesignatedGoogleOwner } from "./google-account";
+import { gatewayBindingMatches } from "./owner-gateway-binding";
 
 const COOKIE = "bharatchat-owner-gateway";
 // The verified Google identity on the account itself is the proof of ownership.
@@ -18,8 +19,14 @@ async function sign(value: string) {
   return Array.from(new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(value))))
     .map((n) => n.toString(16).padStart(2, "0")).join("");
 }
-export async function grantGateway(userId: string, sessionId: string) {
-  const payload = `${userId}.${sessionId}.${Date.now() + 30 * 60 * 1000}`;
+async function tokenFingerprint(token: string) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+export async function grantGateway(userId: string, token: string) {
+  const fingerprint = await tokenFingerprint(token);
+  const payload = `${userId}.${Date.now() + 30 * 60 * 1000}.${fingerprint}`;
   setCookie(COOKIE, `${payload}.${await sign(payload)}`, {
     httpOnly: true, secure: true, sameSite: "strict", path: "/", maxAge: 30 * 60,
   });
@@ -27,12 +34,17 @@ export async function grantGateway(userId: string, sessionId: string) {
 export async function assertGateway(userId: string) {
   const cookie = getCookie(COOKIE);
   const parts = cookie?.split(".");
-  if (!parts || parts.length !== 4 || parts[0] !== userId || Number(parts[2]) <= Date.now()) throw new Error("Forbidden");
+  if (!parts || parts.length !== 4) throw new Error("Forbidden");
   const { getRequest } = await import("@tanstack/react-start/server");
   const header = getRequest().headers.get("authorization") ?? "";
+  if (!header.startsWith("Bearer ")) throw new Error("Forbidden");
+  const token = header.slice("Bearer ".length);
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  const { data, error } = await supabaseAdmin.auth.getClaims(header.replace(/^Bearer /, ""));
-  if (error || data?.claims.session_id !== parts[1]) throw new Error("Forbidden");
+  const { data, error } = await supabaseAdmin.auth.getClaims(token);
+  if (error || data?.claims.sub !== userId) throw new Error("Forbidden");
+  if (!gatewayBindingMatches(userId, await tokenFingerprint(token), parts[0] ?? "", parts[2] ?? "", Number(parts[1]), Date.now())) {
+    throw new Error("Forbidden");
+  }
   const { safeEqual } = await import("./jarvis.server");
   const signature = parts[3];
   if (!signature || !safeEqual(signature, await sign(parts.slice(0, 3).join(".")))) throw new Error("Forbidden");

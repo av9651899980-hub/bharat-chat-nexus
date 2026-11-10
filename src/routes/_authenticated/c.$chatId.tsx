@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Send, MoreVertical, Check, CheckCheck, X, Paperclip, Loader2, FileText, Download } from "lucide-react";
@@ -9,8 +9,9 @@ import { VoiceRecorder, VoicePlayer } from "@/components/voice-recorder";
 import { useAccount } from "@/hooks/useAccount";
 import { supabase } from "@/integrations/supabase/client";
 import { topRole, type AppRole } from "@/lib/identity";
-import { loadChats, searchProfiles } from "@/lib/chat-client";
+import { loadChats, searchProfiles, unhideChat } from "@/lib/chat-client";
 import { ProfileAvatar } from "@/components/profile-avatar";
+import { PhotoLightbox } from "@/components/photo-lightbox";
 import { formatAttachmentSize, uploadAttachmentWithProgress } from "@/lib/attachment-upload";
 
 export const Route = createFileRoute("/_authenticated/c/$chatId")({
@@ -60,6 +61,7 @@ function ConversationPage() {
   const [forwarding, setForwarding] = useState<MessageRow | null>(null);
   const [panel, setPanel] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const [photo, setPhoto] = useState<{ src: string; name: string } | null>(null);
 
   const { data: chat } = useQuery({
     queryKey: ["chat", chatId],
@@ -138,6 +140,11 @@ function ConversationPage() {
     enabled: !!userId && !!forwarding,
     queryFn: async () => [...(await loadChats(userId!, false)), ...(await loadChats(userId!, true))],
   });
+
+  useEffect(() => {
+    if (!userId) return;
+    void unhideChat(userId, chatId).then(() => queryClient.invalidateQueries({ queryKey: ["chats", userId] }));
+  }, [chatId, queryClient, userId]);
 
   useEffect(() => {
     const channel = supabase
@@ -308,16 +315,23 @@ function ConversationPage() {
         <button onClick={() => navigate({ to: "/chats" })} className="flex items-center gap-1 text-sm text-muted-foreground">
           <ArrowLeft className="size-4" /> Back
         </button>
-        <div className="flex min-w-0 items-center gap-2 px-2 text-right">
-          {!isGroup ? <ProfileAvatar src={other?.profile?.avatar_url} name={title} className="size-9" textClassName="text-xs" /> : null}
-          <div className="min-w-0">
-            <p className="truncate text-sm font-semibold">
-              {title}
-              {!isGroup ? <RoleBadge role={other?.role ?? null} /> : null}
-            </p>
-            <p className="text-[11px] text-muted-foreground">{presence}</p>
-          </div>
-        </div>
+        {isGroup ? (
+          <button type="button" onClick={() => setPanel((value) => !value)} className="flex min-w-0 items-center gap-2 px-2 text-right">
+            <ProfileAvatar name={title} className="size-9" textClassName="text-xs" />
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold">{title}</span>
+              <span className="block text-[11px] text-muted-foreground">{presence}</span>
+            </span>
+          </button>
+        ) : other?.userId ? (
+          <Link to="/u/$userId" params={{ userId: other.userId }} className="flex min-w-0 items-center gap-2 px-2 text-right">
+            <ProfileAvatar src={other.profile?.avatar_url} name={title} className="size-9" textClassName="text-xs" />
+            <span className="min-w-0">
+              <span className="block truncate text-sm font-semibold">{title} <RoleBadge role={other.role ?? null} /></span>
+              <span className="block text-[11px] text-muted-foreground">{presence}</span>
+            </span>
+          </Link>
+        ) : null}
         <button onClick={() => setPanel((v) => !v)} aria-label="Conversation options">
           <MoreVertical className="size-5" />
         </button>
@@ -343,10 +357,15 @@ function ConversationPage() {
           const messageReactions = (reactions ?? []).filter((r) => r.message_id === m.id);
           const readByOther = (reads ?? []).some((r) => r.message_id === m.id && r.user_id !== m.sender_id);
           return (
-            <div
+              <div
               key={m.id}
               className={`flex msg-in ${mine ? "justify-end" : "justify-start"}`}
             >
+                {isGroup && !mine && sender ? (
+                  <Link to="/u/$userId" params={{ userId: sender.userId }} aria-label={`View ${sender.profile?.display_name ?? "member"} profile`} className="mr-2 mt-1 self-start">
+                    <ProfileAvatar src={sender.profile?.avatar_url} name={sender.profile?.display_name} className="size-8" textClassName="text-[10px]" />
+                  </Link>
+                ) : null}
               <div
                 onClick={() => setActive(m)}
                 onKeyDown={(event) => {
@@ -362,8 +381,12 @@ function ConversationPage() {
               >
                 {isGroup && !mine ? (
                   <span className="mb-0.5 block text-[11px] font-semibold text-primary">
-                    {sender?.profile?.display_name ?? "Member"}
-                    <RoleBadge role={sender?.role ?? null} />
+                    {sender ? (
+                      <Link to="/u/$userId" params={{ userId: sender.userId }} onClick={(event) => event.stopPropagation()} className="inline-flex items-center gap-1">
+                        {sender.profile?.display_name ?? "Member"}
+                        <RoleBadge role={sender.role ?? null} />
+                      </Link>
+                    ) : "Member"}
                   </span>
                 ) : null}
                 {parent ? (
@@ -527,6 +550,7 @@ function ConversationPage() {
           ) : null}
         </div>
       </div>
+      {photo ? <PhotoLightbox src={photo.src} name={photo.name} onClose={() => setPhoto(null)} /> : null}
     </AppShell>
   );
 }
@@ -633,10 +657,13 @@ function ConversationPanel({
           <ul className="space-y-1">
             {members.map((m) => (
               <li key={m.userId} className="flex items-center justify-between rounded-xl bg-muted px-3 py-2 text-sm">
-                <span>
-                  {m.profile?.display_name}
-                  {m.isAdmin ? <span className="ml-1 text-[10px] font-bold text-primary">ADMIN</span> : null}
-                </span>
+                <Link to="/u/$userId" params={{ userId: m.userId }} className="flex min-w-0 items-center gap-2">
+                  <ProfileAvatar src={m.profile?.avatar_url} name={m.profile?.display_name} className="size-8" textClassName="text-[10px]" />
+                  <span className="truncate">
+                    {m.profile?.display_name}
+                    {m.isAdmin ? <span className="ml-1 text-[10px] font-bold text-primary">ADMIN</span> : null}
+                  </span>
+                </Link>
                 {isAdmin && m.userId !== userId ? (
                   <span className="flex gap-2 text-[11px]">
                     <button
