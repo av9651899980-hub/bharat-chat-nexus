@@ -8,14 +8,15 @@ export const verifyGodKey = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const { designatedOwner, grantGateway } = await import("./owner-gateway.server");
     const { safeEqual } = await import("./jarvis.server");
+    const { getRequest } = await import("@tanstack/react-start/server");
     if (!await designatedOwner(context.supabase)) throw new Error("Verification failed");
     const { data: owner, error: ownerError } = await context.supabase.rpc("is_owner", { _user_id: context.userId });
     if (ownerError || !owner) throw new Error("Verification failed");
     const godKey = process.env["GOD_KEY"];
-    const sessionId = context.claims.session_id;
-    if (!godKey || typeof sessionId !== "string") throw new Error("Verification failed");
+    const authorization = getRequest().headers.get("authorization") ?? "";
+    if (!godKey || !authorization.startsWith("Bearer ")) throw new Error("Verification failed");
     if (!safeEqual(data.key.trim(), godKey)) throw new Error("Verification failed");
-    await grantGateway(context.userId, sessionId);
+    await grantGateway(context.userId, authorization.slice("Bearer ".length));
     return { ok: true as const };
   });
 
