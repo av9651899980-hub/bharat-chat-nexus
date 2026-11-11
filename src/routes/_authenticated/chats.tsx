@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { searchOwnerGateway } from "@/lib/owner-gateway.functions";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -36,6 +36,8 @@ function ChatsPage() {
   const [filter, setFilter] = useState<ConversationTypeFilter>("all");
   const [activeChat, setActiveChat] = useState<ChatSummary | null>(null);
   const [actionBusy, setActionBusy] = useState(false);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const heldForActions = useRef(false);
   const queryClient = useQueryClient();
   const gateway = useServerFn(searchOwnerGateway);
   const navigate = useNavigate();
@@ -49,6 +51,15 @@ function ChatsPage() {
     }, 600);
     return () => { active = false; clearTimeout(timer); };
   }, [term, gateway, navigate]);
+
+  useEffect(() => () => {
+    if (holdTimer.current) clearTimeout(holdTimer.current);
+  }, []);
+
+  function clearHold() {
+    if (holdTimer.current) clearTimeout(holdTimer.current);
+    holdTimer.current = null;
+  }
 
   const { data: chats, isLoading } = useQuery({
     queryKey: ["chats", userId],
@@ -175,6 +186,24 @@ function ChatsPage() {
             <li
               key={chat.id}
               onContextMenu={(event) => { event.preventDefault(); setActiveChat(chat); }}
+              onPointerDown={(event) => {
+                if (event.pointerType === "mouse") return;
+                heldForActions.current = false;
+                clearHold();
+                holdTimer.current = setTimeout(() => {
+                  heldForActions.current = true;
+                  setActiveChat(chat);
+                }, 550);
+              }}
+              onPointerUp={clearHold}
+              onPointerCancel={clearHold}
+              onPointerLeave={clearHold}
+              onClickCapture={(event) => {
+                if (!heldForActions.current) return;
+                event.preventDefault();
+                event.stopPropagation();
+                heldForActions.current = false;
+              }}
             >
               <Link
                 to="/c/$chatId"

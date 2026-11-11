@@ -624,7 +624,11 @@ function ConversationPanel({
   isAdmin: boolean;
   onlyAdminsSend: boolean;
   otherUserId: string | null;
-  members: { userId: string; isAdmin: boolean; profile: { display_name: string; username: string } | null }[];
+  members: {
+    userId: string;
+    isAdmin: boolean;
+    profile: { display_name: string; username: string; avatar_url: string | null } | null;
+  }[];
   onClose: () => void;
 }) {
   const { userId } = useAccount();
